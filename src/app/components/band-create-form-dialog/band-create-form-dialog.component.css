@@ -1,0 +1,21 @@
+.band-create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 3em;
+}
+
+.band-create-form-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#success-snackbar {
+    background-color: #4caf50; /* Green */
+    color: white;
+}
+
+#error-snackbar {
+    background-color: #f44336; /* Red */
+    color: white;
+}

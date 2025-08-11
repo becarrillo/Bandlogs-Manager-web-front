@@ -1,0 +1,11 @@
+<mat-dialog-content id="dialog">
+    <div><button type="button" id="closeBtn" mat-button (click)="closeDialog()">Cerrar</button></div>
+    <h5 mat-dialog-title>Mis bandas dirigidas</h5>
+    <p id="description">Elige banda(s) para agregar a {{getUserNickname()}}</p>
+    <form [formGroup]="bands" (ngSubmit)="onSubmit()">
+        @for(band of data.bands ; track band.bandId) {
+        <p><mat-checkbox [formControlName]="band.name" (change)="enableSubmit()">{{band.name}}</mat-checkbox></p>
+        }
+        <button class="submit" type="submit" [disabled]="!submitIsEnabled()" mat-stroked-button>HECHO</button>
+    </form>
+</mat-dialog-content>

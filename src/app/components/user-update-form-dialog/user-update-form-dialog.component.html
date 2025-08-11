@@ -1,0 +1,52 @@
+<mat-dialog-content>
+    <form [formGroup]="userUpdateForm" (submit)="onSubmit()">
+        <mat-form-field appearance="outline">
+            <mat-label>Nombres(s)</mat-label>
+            <input inputmode="latin" matInput formControlName="firstname" placeholder="Nombre(s)">
+            @if (userUpdateForm.controls.firstname.invalid) {
+                <mat-hint>Asigne un nombre válido</mat-hint>
+            }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <mat-label>Apellidos</mat-label>
+            <input inputmode="latin" matInput formControlName="lastname" placeholder="Apellidos">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <mat-label>Usuario</mat-label>
+            <input matInput formControlName="nickname" placeholder="Usuario (apodo)">
+            @if (userUpdateForm.controls.firstname.invalid) {
+                <mat-hint>Asigne un nombre de usuario válido</mat-hint>
+            }
+        </mat-form-field>
+        <mat-checkbox
+            formControlName="enablePasswordCheckbox"
+            id="enablePasswordCheckbox"
+            (change)="togglePasswordField()"
+        >
+            Habilitar cambio de contraseña
+        </mat-checkbox>
+        <mat-form-field appearance="outline">
+            <mat-label>Nueva contraseña</mat-label>
+            <input
+                [type]="hide() ? 'password' : 'text'"
+                matInput
+                formControlName="password"
+            />
+            <button
+                mat-icon-button
+                matSuffix
+                (click)="toggleHidePassword($event)"
+                [attr.aria-label]="'Hide password'"
+                [attr.aria-pressed]="hide()"
+                [disabled]="!userUpdateForm.get('enablePasswordCheckbox')?.value"
+            >
+                <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+            <input inputmode="tel" matInput formControlName="phoneNumber" placeholder="Teléfono móvil">
+        </mat-form-field>
+        <button type="submit" mat-flat-button>Actualizar</button>
+    </form>
+</mat-dialog-content>

@@ -1,0 +1,34 @@
+<span id="user">
+    Bienvenido(a) {{userRoleObject.nickname}}
+    <button
+        mat-mini-fab class="profile-btn"
+        matTooltip="Mi perfil"
+        [routerLink]="['/dashboard/usuarios/usuario', {'nombre-de-usuario': userRoleObject.nickname}]"
+    >
+    <mat-icon>person</mat-icon>
+  </button>
+</span>
+<div id="description">
+    <h5 id="pathTitle">Dashboard de Bandlogs Manager</h5>
+    <p>
+        Selecciona una sección a gestionar en nuestra plataforma, de cualquiera de las siguientes:
+    </p>
+</div>
+<mat-list role="list" id="listA">
+    <mat-list-item role="listitem">
+        <button routerLink="/dashboard/usuarios" class="menu-item-btn" mat-flat-button>
+            <mat-icon>person</mat-icon> Gestión Usuario(s)
+        </button>
+    </mat-list-item>
+    
+    <mat-list-item role="listitem">
+        <button routerLink="/dashboard/bandas" class="menu-item-btn" mat-flat-button>
+            <mat-icon>people</mat-icon> Gestión Bandas
+        </button>
+    </mat-list-item>
+    <mat-list-item role="listitem">
+        <button routerLink="/dashboard/eventos" class="menu-item-btn" mat-flat-button>
+            <mat-icon>book</mat-icon> Gestión Eventos
+        </button>
+    </mat-list-item>
+</mat-list>

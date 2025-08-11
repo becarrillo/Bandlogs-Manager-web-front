@@ -1,0 +1,21 @@
+.band-create-form-dialog {
+    display: flex;
+    flex-direction: column;
+}
+
+.band-create-form-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    column-gap: .5em;
+    margin-top: 20px;
+}
+
+#confirm {
+    background-color: red;
+    color: white;
+}
+
+#denied {
+    background-color: white;
+    color: black;
+}

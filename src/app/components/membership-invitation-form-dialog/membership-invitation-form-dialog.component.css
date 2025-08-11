@@ -1,0 +1,26 @@
+div {
+    display: flex;
+    justify-content: end;
+}
+
+#countryCodeField {
+    width: 7em; 
+}
+
+#description {
+    margin-bottom: 2rem;
+}
+
+#membershipInvitationForm {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    row-gap: 1em;
+}
+
+#phoneNumberField {
+    color-scheme: dark;
+}
+
+.submit {
+    width: 100%;
+}

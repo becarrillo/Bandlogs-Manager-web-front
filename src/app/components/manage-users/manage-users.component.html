@@ -1,0 +1,108 @@
+<ng-container *ngIf="!loading(); else suspenseTemplate">
+  <span id="user">
+    Bienvenido(a), {{getLoggedInUsername()}}
+    <button
+      mat-mini-fab
+      class="profile-btn"
+      matTooltip="Mi perfil"
+      [routerLink]="['/dashboard/usuarios/usuario', {
+            'nombre-de-usuario': userRoleObject.nickname
+          }
+        ]
+      "
+    >
+      <mat-icon>person</mat-icon>
+    </button>
+  </span>
+  <div id="userSectionContainer">
+    <h5 class="path-title">Gestión Usuarios</h5>
+    <mat-card class="card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Descripción</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{longText}}</p>
+      </mat-card-content>
+      <mat-card-footer>
+        <div>
+          <button routerLink="/dashboard" mat-button>Regresar al menú</button>
+          <button routerLink="/" mat-button>Ir al Home</button>
+        </div>
+      </mat-card-footer>
+    </mat-card>
+    <app-logged-in-user-menu [section]="getSectionName()"
+      (menuItemEmitter)="handleMenuItem($event)"></app-logged-in-user-menu>
+    @if (menuItemSelectionIsConsult()) {
+      <form [formGroup]="searchUserForm" (submit)="onSearchUser()" id="searchUserForm">
+        <mat-form-field appearance="fill" class="search-user-field">
+          <mat-label>Buscar Usuario</mat-label>
+          <input
+            type="text"
+            inputmode="latin-name"
+            matInput
+            id="searchUserControl"
+            formControlName="searchUserControl"
+            placeholder="Nombre de usuario"
+          />
+          <mat-error *ngIf="searchUserForm.controls.searchUserControl.invalid">
+            El nombre de usuario debe tener al menos 3 caracteres.
+          </mat-error>
+        </mat-form-field>
+        <button type="submit" class="submit-btn" mat-mini-fab><mat-icon>search</mat-icon></button>
+      </form>
+    }
+    @if (allUsers != null) {
+      <h6 id="pathTitle">Tabla Usuario(s)</h6>
+      <div id="tableContainer">
+        <table mat-table [dataSource]="dataSource">
+          <!-- Position Column -->
+          <ng-container matColumnDef="userId">
+            <th mat-header-cell *matHeaderCellDef> Id </th>
+            <td mat-cell *matCellDef="let element"> {{element.userId}} </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="firstname">
+            <th mat-header-cell *matHeaderCellDef> Nombre </th>
+            <td mat-cell *matCellDef="let element"> {{element.firstname}} </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="lastname">
+            <th mat-header-cell *matHeaderCellDef> Apellidos </th>
+            <td mat-cell *matCellDef="let element"> {{element.lastname}} </td>
+          </ng-container>
+
+          <!-- Weight Column -->
+          <ng-container matColumnDef="nickname">
+            <th mat-header-cell *matHeaderCellDef> Apodo/Usuario </th>
+            <td mat-cell *matCellDef="let element">
+              <a
+                [routerLink]="['/dashboard/usuarios/usuario', {'nombre-de-usuario': element.nickname}]"
+                class="user-link"
+              >
+                {{element.nickname}}</a> </td>
+          </ng-container>
+
+          <!-- Symbol Column -->
+          <ng-container matColumnDef="phoneNumber">
+            <th mat-header-cell *matHeaderCellDef> Celular </th>
+            <td mat-cell *matCellDef="let element"> {{element.phoneNumber}} </td>
+          </ng-container>
+
+          <!-- Symbol Column -->
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef> Rol </th>
+            <td mat-cell *matCellDef="let element"> {{element.role===0 ? 'ADMINISTRADOR':'USUARIO'}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    }
+  </div>
+</ng-container>
+<ng-template #suspenseTemplate>
+  <app-form-suspense text="Cargando usuarios..."></app-form-suspense>
+</ng-template>

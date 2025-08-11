@@ -1,0 +1,70 @@
+@if (songs.length>=1) {
+    @for (song of songs; track $index) {
+        {{$index}}. <p>Canción agregada: título -> {{song.title}}, tónica -> {{song.tonality}}, progresión -> {{song.progression}}</p>
+    }
+    
+}
+<form [formGroup]="songCreateForm">
+    <fieldset>
+        <legend>Titulo de la canción</legend>
+        <mat-form-field appearance="outline">
+            <mat-label>Agrega el título de la canción</mat-label>
+            <input matInput formControlName="name" placeholder="título" />
+        </mat-form-field>
+    </fieldset>
+
+    <fieldset>
+        <legend>Armonía de la canción</legend>
+        <mat-form-field appearance="outline">
+            <mat-label>Tonalidad</mat-label>
+            <input matInput [matAutocomplete]="auto" #songTonalityInput formControlName="tonality" (input)="filter()"
+                (focus)="filter()" (change)="songCreateForm.controls.progression.enable()" />
+            <mat-autocomplete requireSelection #auto="matAutocomplete">
+                @for(chord of getChords(); track $index) {
+                <mat-option [value]="
+                        chord.pitch.includes('/') ? (
+                            (chord.pitch.split('/').at(1)!).concat(chord.suffix)
+                        ) : (
+                            (chord.pitch).concat(chord.suffix)
+                        )
+                    ">
+                    {{
+                    chord.pitch.includes('/') &&
+                    chord.pitch.split('/').at(0)!=='Fa#' ? (
+                    (chord.pitch.split('/').at(1)!).concat(chord.suffix)
+                    ) : (
+                    (chord.pitch.split('/').at(0)!).concat(chord.suffix)
+                    )
+                    }}
+                </mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+
+        <mat-form-field id="addChord" appearance="outline">
+            <mat-label>Acordes</mat-label>
+            <mat-chip-grid #reactiveChipGrid aria-label="Enter reactive form keywords" formControlName="progression">
+                @for (keyword of reactiveKeywords(); track keyword) {
+                <mat-chip-row (removed)="removeReactiveChordKeyword(keyword)">
+                    {{keyword}}
+                    <button matChipRemove [attr.aria-label]="'remove reactive chord: '.concat(keyword)">
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-chip-row>
+                }
+            </mat-chip-grid>
+            <input [matChipInputFor]="reactiveChipGrid" [matAutocomplete]="auto1"
+                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                (matChipInputTokenEnd)="addReactiveChordKeyword($event)" />
+            <mat-autocomplete #auto1="matAutocomplete" (optionSelected)="onSelected($event)">
+                @for (chord of getChords(); track $index) {
+                <mat-option [value]="
+                            formatChordPitch(getLatinStrPitches().indexOf(chord.pitch)).concat(chord.suffix)
+                        ">
+                    {{formatChordPitch(getLatinStrPitches().indexOf(chord.pitch)).concat(chord.suffix)}}
+                </mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+    </fieldset>
+</form>

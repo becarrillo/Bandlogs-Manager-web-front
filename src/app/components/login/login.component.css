@@ -1,0 +1,35 @@
+#loginForm {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    row-gap: 4px;
+    margin-top: 3pc;
+    align-items: center;
+    justify-self: center;
+    justify-content: center;
+    width: 56vw;
+    border-radius: 7px;
+}
+
+.form-field-container {
+    width: 100%;
+}
+
+.form-field {
+    padding-top: 15px;
+}
+
+h5 {
+    display: flex;
+    justify-content: center;
+    margin-top: 6rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.example-container > .form-field {
+    padding-top: 18px;
+}
+
+#passwordField {
+    width: 10.75em;
+}

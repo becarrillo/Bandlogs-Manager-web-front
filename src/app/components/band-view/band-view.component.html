@@ -1,0 +1,76 @@
+<mat-drawer-container class="example-container">
+    <mat-drawer mode="side" class="side-menu" opened>
+        <mat-list class="side-menu-list">
+            <mat-list-item>
+                <button matTooltip="agregar nuevo miembro" mat-raised-button>
+                    <mat-icon class="menu-item-icon">person_add</mat-icon>
+                </button>
+            </mat-list-item>
+            <mat-list-item>
+                <button
+                    mat-raised-button
+                    [routerLink]="
+                        '/dashboard/bandas/'+band.bandId+'/eventos/agregar'
+                    "
+                    [matTooltip]="'agregar nuevo evento para la banda'"
+                >
+                    <mat-icon class="menu-item-icon">event_note</mat-icon>
+                </button>
+            </mat-list-item>
+            <mat-list-item>
+                <button matTooltip="repertorio" mat-raised-button><mat-icon class="menu-item-icon">ballot</mat-icon></button>
+            </mat-list-item>
+            <mat-list-item>
+                <button (click)="openFormDialog(getManagingBandEnumType().TO_DELETE, {band})" matTooltip="eliminar banda" mat-raised-button>
+                    <mat-icon class="menu-item-icon">delete_forever</mat-icon>
+                </button>
+            </mat-list-item>
+        </mat-list>
+    </mat-drawer>
+    <mat-drawer-content>
+        <div [class]="getTheme()==='dark'?'text-white': 'text-dark'" id="content">
+            <div id="head">
+                <h6>{{band.name}}</h6>
+                <button
+                    matTooltip="editar banda"
+                    (click)="openFormDialog(
+                            getManagingBandEnumType().TO_UPDATE,
+                            {band}
+                        )
+                    "
+                    mat-icon-button
+                >
+                    <mat-icon id="editIcon">edit</mat-icon>
+                </button>
+            </div>
+            <p>Director: {{band.director}}</p>
+            <p>Género: {{getMusicalGenreString()}}</p>
+            @if(band.users!==undefined && band.users.length > 0) {
+            <div>
+                <p>Miembros:</p>
+                <mat-list role="list" class="list">
+                    @for(member of band.users; track member.userId) {
+                    <mat-list-item role="listitem">
+                        <a [routerLink]="['/dashboard/usuarios/usuario', {
+                                'nombre-de-usuario': member.nickname
+                            }
+                        ]" class="user-link">
+                            {{member.nickname}}</a>
+                    </mat-list-item>
+                    }
+                </mat-list>
+            </div>
+            }
+            @if (band.events!==undefined && band.events.length>0) {
+            <div class="list">
+                <h6>Eventos de la banda:</h6>
+                <mat-list role="list">
+                    @for(event of band.events; track event.eventId) {
+                    <mat-list-item role="listitem">{{event.description}}</mat-list-item>
+                    }
+                </mat-list>
+            </div>
+            }
+        </div>
+    </mat-drawer-content>
+</mat-drawer-container>

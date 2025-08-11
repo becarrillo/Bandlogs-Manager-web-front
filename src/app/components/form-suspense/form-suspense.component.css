@@ -1,0 +1,10 @@
+#suspenseTemplateSpan {
+    display: flex;
+    flex-direction: column;
+    place-items: center;
+    height: 94vh;
+}
+
+#suspenseTemplateSpan > #loadingSpinner {
+  margin-top: 36vh;
+}

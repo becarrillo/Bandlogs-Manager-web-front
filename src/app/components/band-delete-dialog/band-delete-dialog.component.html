@@ -1,0 +1,9 @@
+<mat-dialog-content>
+    <div class="band-create-form-dialog">
+        <p>¿Estás seguro de eliminar la banda {{data.band.name}}?</p>
+        <div class="band-create-form-dialog-buttons">
+            <button id="confirm" (click)="onDeleteConfirm()" mat-fab>SI</button>
+            <button id="denied" (click)="dialogRef.close()" mat-fab>NO</button>
+        </div>
+    </div>
+</mat-dialog-content>

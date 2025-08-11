@@ -1,0 +1,33 @@
+<ng-container *ngIf="!loading(); else suspenseTemplate">
+    <div id="profile">
+        @if (user!==null && user.nickname === getLoggedInUsername()) {
+            <div id="titleContainer">
+                <h5>Usuario <strong class="nickname">{{user.nickname}}</strong> en Bandlogs</h5>
+                <button (click)="openDialog()" mat-icon-button><mat-icon>edit</mat-icon></button>
+            </div>
+        } @else {
+            <h5>Usuario <strong class="nickname">{{user!.nickname}}</strong> en Bandlogs</h5>
+        }
+        <div class="avatar"> {{getUserInitials(user!.firstname, user!.lastname)}}</div>
+        <p>apellidos: {{user!.lastname}}</p>
+        <p>nombre(s): {{user!.firstname}}</p>
+        <p>teléfono: {{user!.phoneNumber}}</p>
+        <p>nombre usuario: <span class="nickname">{{user!.nickname}}</span></p>
+        @if (bands.length>=1 && user!.nickname !== getLoggedInUsername()) {
+            <div id="bandControl">
+                <p>¿Quieres agregar el usuario a una banda que diriges?</p>
+                <mat-form-field>
+                    <mat-label>Selecciona Banda</mat-label>
+                    <mat-select (selectionChange)="onBandSelectionChange($event)">
+                        @for (band of bands; track band.bandId) {
+                        <mat-option [value]="band.name">{{band.name}}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        }
+    </div>
+</ng-container>
+<ng-template #suspenseTemplate>
+    <app-form-suspense text="Realizando modificaciones..."></app-form-suspense>
+</ng-template>

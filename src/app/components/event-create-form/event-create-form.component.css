@@ -1,0 +1,33 @@
+#director {
+    font-style: italic;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.6pc;
+    margin-top: 3vh;
+}
+
+
+
+#fields {
+    padding: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1vw;
+}
+
+p {
+    margin: 4.5vw 4.5vw;
+}
+
+.stepper {
+    min-height: 100vh;
+}
+
+.step-action-btns {
+    display: flex;
+    justify-self: end;
+    column-gap: 1.2em;
+}

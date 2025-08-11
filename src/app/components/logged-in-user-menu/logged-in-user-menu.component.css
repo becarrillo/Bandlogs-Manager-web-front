@@ -1,0 +1,50 @@
+#listA {
+    display: grid;
+    width: max-content;
+    margin-left: 0;
+    background-color: grey;
+}
+
+#listA button {
+    border-radius: 3px;
+    border-width: 2px;
+    border-color: rgb(0, 0, 0);
+    padding-left: 2em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    padding-right: 2em;
+    background-color: lightgrey;
+    text-decoration: none;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+#listA button:hover {
+    scale: 105%;
+    transition: all;
+    transition-duration: 0.45s;
+    border-radius: 3px;
+    background-color: rgb(208, 248, 235);
+}
+
+@media screen and (max-width: 767px) {
+    #listA {
+        grid-template-rows: repeat(3, 1fr);
+        row-gap: 1.2em;
+        justify-self: center;
+    }
+
+    #listA button {
+        width: 90%;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #listA {
+        grid-template-columns: repeat(3, 1fr);
+        row-gap: 1rem;
+    }
+
+    #listA button {
+        width: 20vw;
+    }
+}

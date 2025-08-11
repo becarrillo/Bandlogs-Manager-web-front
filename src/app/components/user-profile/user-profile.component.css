@@ -1,0 +1,52 @@
+.avatar {
+    color: #fff; 
+    background-color: #eec68a8c;
+    padding: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: x-large;
+    border-radius:100%;
+    width:70px;
+    height: 70px;
+    font-weight: 600;
+}
+
+.nickname {
+    font-style: italic;
+}
+
+#profile {
+    display: grid;
+    justify-self: center;
+    justify-items: center;
+    padding-top: 2.5rem;
+    padding-bottom: 2em;
+    row-gap: 2.5em;
+    font-family:'Courier New', Courier, monospace;
+    font-size: larger;
+}
+
+#bandControl {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#titleContainer {
+    display: flex;
+}
+
+@media screen and(max-width: 576px) {
+    #profile {
+        grid-template-rows: repeat(6, 1fr);
+    }
+}
+
+@media screen and(min-width: 577px) {
+    #profile {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+    
+}

@@ -1,0 +1,19 @@
+fieldset {
+    display: flex;
+    flex-direction: column;
+    row-gap: 0.3in;
+    padding: 1.5em;
+    margin-bottom: 16px;
+}
+
+#addChord {
+    display: flex;
+}
+
+.add-btn {
+    display: block;
+}
+
+.submit-btn {
+    width: 100%;
+}

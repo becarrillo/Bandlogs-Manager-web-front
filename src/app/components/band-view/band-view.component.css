@@ -1,0 +1,65 @@
+.example-container {
+    background-color: transparent;
+    min-height: 100vh;
+}
+
+.side-menu {
+    display: flex;
+    flex-direction: column;
+    width: 3.5em;
+}
+
+.side-menu-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8em;
+    padding: 0%;
+    row-gap: 1.8pc;
+}
+
+.side-menu-list > mat-list-item {
+    padding: 0%;
+}
+
+#head {
+    display: flex;
+    column-gap: 5px;
+}
+
+button {
+    display: flex;
+    width: max-content;
+}
+
+.menu-item-icon {
+    justify-self: center;
+}
+
+#editIcon {
+    color: darkcyan;
+}
+
+button:hover {
+    scale: 118%;
+}
+
+#content {
+    display: flex;
+    flex-direction: column;
+    padding: 4.5vw 3vw;
+    justify-content: center;
+    row-gap: 2rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.text-dark {
+    color: rgb(37, 37, 37);
+}
+
+.text.light {
+    color: white;
+}
+
+.user-link {
+    color: rgb(113, 167, 192);
+}

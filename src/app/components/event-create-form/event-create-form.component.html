@@ -1,0 +1,68 @@
+<mat-stepper [linear]="true" #stepper class="stepper">
+    <mat-step [stepControl]="eventCreateForm">
+        <form [formGroup]="eventCreateForm">
+            <ng-template matStepLabel class="step-label">Agregar evento para "{{bandSignal()?.name}}"
+            </ng-template>
+            <fieldset id="fields">
+                <legend>Información básica</legend>
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha</mat-label>
+                    <input matInput [matDatepicker]="picker" (dateChange)="onDateChange()" formControlName="date"
+                        placeholder="Fecha del evento" required />
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                    <mat-hint>Seleccione la fecha del evento</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>Descripción</mat-label>
+                    <textarea matInput formControlName="description" placeholder="Descripción del evento"></textarea>
+                    <mat-hint>Agregue una descripción al evento</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>Ubicación</mat-label>
+                    <input matInput formControlName="location" placeholder="Ubicación del evento" />
+                    <mat-hint>Agregue la ubicación del evento (opcional)</mat-hint>
+                </mat-form-field>
+            </fieldset>
+
+            <button
+                mat-stroked-button
+                matStepperNext
+                matTooltip="Agrega canciones de repertorio"
+            >
+                Siguiente
+            </button>
+
+            @if (songsSignal().length>=1) {
+            <fieldset>
+                <legend>Repertorio del evento</legend>
+                <mat-form-field appearance="outline">
+                    <mat-label>canciones</mat-label>
+                    <mat-chip-grid #reactiveChipGrid aria-label="Ingresa canciónes del repertorio"
+                        [formControl]="eventCreateForm.controls.repertoire">
+                        @for (keyword of reactiveKeywords(); track keyword) {
+                        <mat-chip-row (removed)="removeReactiveKeyword(keyword)">
+                            {{keyword}}
+                            <button matChipRemove [attr.aria-label]="'remove reactive form' + keyword">
+                                <mat-icon>cancel</mat-icon>
+                            </button>
+                        </mat-chip-row>
+                        }
+                    </mat-chip-grid>
+                    <input placeholder="Nueva canción..." [matChipInputFor]="reactiveChipGrid" readonly />
+                    <button type="button" mat-icon-button><mat-icon>edit</mat-icon></button>
+                </mat-form-field>
+            </fieldset>
+            }
+        </form>
+    </mat-step>
+    <mat-step [stepControl]="eventCreateForm">
+        <ng-template matStepLabel class="step-label">Agregar canciones del evento</ng-template>
+        <app-song-create-form (songCreateForm)="setSongCreateForm($event)" (song)="addSong($event)">
+        </app-song-create-form>
+        <div class="step-action-btns">
+            <button mat-stroked-button matStepperPrevious>Anterior</button>
+            <button mat-stroked-button (click)="sendEvent()">Enviar</button>
+        </div>
+    </mat-step>
+</mat-stepper>

@@ -1,0 +1,32 @@
+<ng-container *ngIf="!loading(); else suspenseTemplate">
+  <h5>Login</h5>
+  <form [formGroup]="loginForm" id="loginForm" (ngSubmit)="onSubmit()">
+    <div class="form-field-container">
+      <mat-form-field class="form-field">
+        <mat-label> Usuario </mat-label>
+        <input type="text" matInput placeholder="Tu apodo" [formControl]="loginForm.controls.nickname"
+          (blur)="updateErrorMessage(loginForm.controls.nickname)" required />
+        @if (loginForm.controls.nickname.invalid) {
+        <mat-error>{{errorMessage()}}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+    <mat-form-field class="form-field">
+      <mat-label> Contraseña </mat-label>
+      <input [type]="hide() ? 'password' : 'text'" matInput placeholder="********" formControlName="password"
+        (blur)="updateErrorMessage(loginForm.controls.password)" required id="passwordField" />
+      <button mat-icon-button matSuffix (click)="toggleHidePassword($event)" [attr.aria-label]="'Hide password'"
+        [attr.aria-pressed]="hide()">
+          <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
+      </button>
+      @if (loginForm.controls.password.invalid) {
+      <mat-error>{{errorMessage()}}</mat-error>
+      }
+    </mat-form-field>
+    <button type="submit" mat-flat-button id="submit" [disabled]="disableSubmitBtn()">Ingresa</button>
+  </form>
+</ng-container>
+<!-- Loading bands state template when loading signal value changes  -->
+<ng-template #suspenseTemplate>
+  <app-form-suspense text="Verificando credenciales..."></app-form-suspense>
+</ng-template>

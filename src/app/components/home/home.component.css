@@ -1,0 +1,67 @@
+#homeMenu {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2em;
+    padding-top: 1rem;
+}
+
+.link {
+    text-decoration: none;
+    color: white;
+}
+
+.white-brand-text {
+    padding-top: 12px;
+    color: white;
+}
+
+.dark-brand-text {
+    padding-top: 12px;
+    color: black;
+}
+
+.card-title {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 600;
+}
+
+.card-subtitle {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: darkcyan;
+}
+
+#author {
+    font-style: italic;
+}
+
+.example-header-image {
+ background-image: url('https://scontent.feoh1-1.fna.fbcdn.net/v/t39.30808-6/344302242_1206845056645043_9152813120214271430_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=auis-WkDKgMQ7kNvwGcjx_d&_nc_oc=AdmMwj5Zb1hUMmwYvR_Neb0d2x19Jgv4qB8MUTY4mtA87fFp5IJ_4631jUtPRnDCxJg&_nc_zt=23&_nc_ht=scontent.feoh1-1.fna&_nc_gid=OvMbB7jvQBz4GAXDCLhvwQ&oh=00_AfMdVITvvOyimhHFfm_oEBLj-trtjifYtdH6gLAoA_ijuQ&oe=68639559');
+ background-size: contain;
+}
+
+.mat-icon-button {
+    margin-bottom: 6px;
+    background-color: rgb(63, 65, 59);
+}
+
+#menuIcon {
+    color: white;
+}
+
+.home-card {
+    justify-self: center;
+    max-width: 330px;
+    background: transparent;
+    padding-top: .5rem;
+    padding-bottom: 2rem;
+    row-gap: 1.2em;
+}
+
+.home-card > .home-card-header {
+    row-gap: 2pc;
+}
+
+span {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 500;
+}

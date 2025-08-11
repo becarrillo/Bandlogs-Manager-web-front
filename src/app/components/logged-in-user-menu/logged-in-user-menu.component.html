@@ -1,0 +1,30 @@
+<mat-list role="list" id="listA">
+    <mat-list-item role="listitem">
+        <button
+            class="menu-item-btn"
+            (click)="onMenuButtonClick('consultar')"
+            mat-flat-button
+        >
+            <mat-icon>search</mat-icon> Consultar
+        </button>
+    </mat-list-item>
+    <mat-list-item role="listitem">
+        <button
+            class="menu-item-btn"
+            (click)="onMenuButtonClick('listar')"
+            mat-flat-button
+        >
+            <mat-icon>list_items</mat-icon> Listar
+        </button>
+    </mat-list-item>
+    <mat-list-item role="listitem">
+        <button
+            routerLink="/dashboard/bandas/estadisticas"
+            class="menu-item-btn"
+            (click)="onMenuButtonClick('estadísticas')"
+            mat-flat-button
+        >
+            <mat-icon>bar_chart</mat-icon> Estadísticas
+        </button>
+    </mat-list-item>
+</mat-list>

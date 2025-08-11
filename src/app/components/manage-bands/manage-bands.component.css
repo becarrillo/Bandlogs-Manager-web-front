@@ -1,0 +1,162 @@
+
+
+#user {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 1pc;
+    margin-right: 1pc;
+    padding: 1pc;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.profile-btn {
+    background-color: rgb(32, 168, 161);
+}
+
+.profile-btn:hover {
+    scale: 105%;
+    background-color: rgb(77, 221, 214);
+}
+
+#bandsSectionContainer {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2em;
+    margin-left: 1pc;
+    margin-right: 1pc;
+    margin-bottom: 1rem;
+    padding-left: 1pc;
+    padding-right: 1pc;
+    padding-top: 9px;
+    padding-bottom: 9px;
+}
+
+.path-title {
+    font-weight: 600;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    margin-top: .5em;
+}
+
+#addBandBtn {
+    background-color: black;
+}
+
+#addBandBtn:hover {
+    scale: 105%;
+    background-color: rgb(16, 31, 121);
+}
+
+.band-btn {
+    border: 1px solid darkgrey;
+    border-radius: 3px;
+    background-color: grey;
+}
+
+#bandMenu {
+    display: flex;
+    flex-direction: column;
+}
+
+#userFormFieldContainer {
+    display: inline-flex;
+    padding-top: 18px;
+    width: 100%;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+#search {
+    height: 4.3em;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    background-color: black;
+}
+
+.card {
+    border: 2px solid grey;
+    background-color: transparent;
+    width: 100%;
+    min-height: 27vh;
+    overflow-y: auto;
+    row-gap: 0.89pc;
+}
+
+.card-footer {
+  padding: 16px;
+}
+
+.dialog-backdrop {
+    backdrop-filter: contrast(3px);
+}
+
+.mat-mdc-chip-set-stacked {
+    border-radius: 4px;
+    background-color: rgb(105, 102, 99);
+    padding: 4px;
+}
+
+p {
+    font-family: Arial, Helvetica, sans-serif;
+    
+}
+
+table {
+    background-color: black;
+}
+
+#tableContainer {
+    background-color: grey;
+    max-width: 96vw;
+    max-height: 55vh;
+    overflow-y: scroll;
+}
+
+.band-delete {
+    width: 1.7em;
+}
+
+.band-delete:hover {
+    background-color: rgb(92, 71, 71);
+}
+
+.band-update {
+    width: 1.7em;
+}
+
+.band-update:hover {
+    background-color: rgb(9, 9, 107);
+}
+
+.result-msg {
+    font-size: small;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    margin-left: 1pc;
+}
+
+.user-link {
+    color: lightblue;
+}
+
+.user-option {
+    display: flex;
+    width: 100%;
+}
+
+.user-option-div {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.user-fullname {
+    display: inline-block;
+    font-size: x-small;
+    margin-left: 7vw;
+}
+
+#suspense {
+    backdrop-filter: blur(2px);
+}

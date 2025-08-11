@@ -1,0 +1,29 @@
+#container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+#container > nav {
+    display: flex;
+    justify-content: center;
+    z-index: 20;
+}
+
+.bg-dark {
+    background-color: rgb(63, 65, 59);
+    color: white;
+}
+
+.bg-white {
+    background-color: white;
+    color: black;
+}
+
+#buttonToggle {
+    position: fixed;
+    bottom: .5em;
+    display: flex;
+    background-color: rgb(177, 146, 61);
+    width: auto;
+}

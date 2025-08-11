@@ -1,0 +1,35 @@
+#snackContainer {
+    display: flex;
+    justify-content: center;
+    background-color: white;
+    border-radius: 3%;
+}
+
+.login-failure-action {
+    display: flex;
+    color: black;
+}
+
+.login-failure-action > button {
+    background-color: white;
+    color: rgb(51, 49, 49);
+    padding-bottom: 6px;
+    border-width: 1px;
+    font-weight: 700;
+}
+
+.login-failure-action > button:hover {
+    scale: 110%;
+    background-color: rgb(206, 130, 130);
+    color: white;
+}
+
+.login-failure-msg {
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    padding-left: 2em;
+    padding-right: 2em;
+    background-color: red;
+    color: whitesmoke;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+}

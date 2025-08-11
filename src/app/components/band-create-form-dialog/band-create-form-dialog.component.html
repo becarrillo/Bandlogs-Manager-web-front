@@ -1,0 +1,31 @@
+<ng-container *ngIf="!loading(); else suspenseTemplate">
+    <mat-dialog-content>
+        <div class="band-create-form-dialog">
+            <h6>Crear Banda</h6>
+            <form [formGroup]="bandCreateForm" class="band-create-form" (submit)="onSubmit()">
+                <mat-form-field appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input inputmode="latin" matInput formControlName="name" placeholder="Nombre(s)" />
+                    @if (bandCreateForm.controls.name.invalid) {
+                        <mat-hint>Asigne nombre de banda con mínimo 4 letras</mat-hint>
+                    }
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>Género musical</mat-label>
+                    <mat-select matNativeControl required [value]="bandCreateForm.controls.musicalGenre.value" (selectionChange)="onMusicalGenreSelection($event)">
+                        @for (genre of getMusicalGenres(); track genre) {
+                            <mat-option [value]="genre">
+                                {{translateGenreToESString(genre)}}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <button type="submit" [disabled]="bandCreateForm.invalid" mat-flat-button>Enviar</button>
+            </form>
+        </div>
+    </mat-dialog-content>
+</ng-container>
+<!-- Loading bands state template when loading signal value changes  -->
+<ng-template #suspenseTemplate>
+  <app-form-suspense text="Guardando, espere..." id="suspense"></app-form-suspense>
+</ng-template>
