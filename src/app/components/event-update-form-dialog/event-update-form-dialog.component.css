@@ -1,0 +1,51 @@
+mat-dialog-content {
+    display: flex;
+    flex-direction: column;
+}
+
+form {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    max-width: 500px;
+}
+
+fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-top: 2.5rem;
+    padding-bottom: 1rem;
+}
+
+#firstDivider {
+    margin-bottom: 2.5rem;
+}
+
+#repertoire {
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+#repertoireTitleContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1em;
+}
+
+#songEditForm {
+    height: 20em;
+    overflow-y: auto;
+}
+
+.song-changes-btn {
+    margin-left: auto;
+}
+
+.to-back-btn {
+    padding: .5rem;
+    width: 5rem;
+    height: 3rem;
+    background-color: rgb(109, 228, 192);
+    color: rgb(37, 24, 19);
+}

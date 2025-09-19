@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { AppComponent } from '../../app.component';
 
 @Component({
   selector: 'app-user-update-form-dialog',
@@ -32,8 +33,8 @@ import { Router } from '@angular/router';
 export class UserUpdateFormDialogComponent implements OnInit {
   protected readonly data = inject<{user: User, loading: WritableSignal<boolean>}>(MAT_DIALOG_DATA);
   protected readonly dialogRef = inject(MatDialogRef<UserUpdateFormDialogComponent>);
-  protected userService = inject(UserService);
-  protected router = inject(Router);
+  protected readonly userService = inject(UserService);
+  readonly router = inject(Router);
   protected userUpdateForm = new FormBuilder().group({
     firstname: new FormControl<string>(this.data.user.firstname),
     lastname: new FormControl<string>(this.data.user.lastname),
@@ -45,7 +46,7 @@ export class UserUpdateFormDialogComponent implements OnInit {
       // Password field with validation
     phoneNumber: new FormControl<string>(this.data.user.phoneNumber)
   });
-  hide = signal(true);
+  hidePassworddToggler = signal(true);
 
   _snackBar = inject(MatSnackBar);
 
@@ -96,25 +97,45 @@ export class UserUpdateFormDialogComponent implements OnInit {
                 this.router.navigateByUrl('/dashboard'); // Navigate to the dashboard or another page
               },
               error: (err) => {
-                this.data.loading.set(false);
-                // Handle error, e.g., show an error message
-                this._snackBar.open("Error al modificar el usuario", "Cerrar", {
-                  duration: 3000,
-                  panelClass: ['error-snackbar']
-                });
+                onError(err)
               }
             });
             this.data.loading.set(false);
             // Assuming you have a method in your service to update the user
           });
+    const onError = (err: any) => {
+      console.error(err);
+      this.data.loading.set(false);
+      if (err.status === 401) {
+        localStorage.removeItem('accessToken');
+        AppComponent.userIsAuthenticated.set(false);
+        // Handle error, e.g., show an error message
+        this._snackBar.open("Error al modificar el usuario, Tu sesión ha expirado. Por favor, inicia sesión de nuevo", "Cerrar", {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.dialogRef.close();
+        this.router.navigateByUrl('/login');
+      } else if (err.status === 500) {
+        // Handle error, e.g., show an error message
+        this._snackBar.open("Error del servidor. Intenta nuevamente más tarde.", "Cerrar", {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        window.alert("");
+      } else {
+        console.error("Error: ".concat(err.message));
+        window.alert("Error desconocido");
+      }
+    }
   }
 
   toggleHidePassword(ev : Event) {
     ev.preventDefault();
-    this.hide() ? (
-      this.hide.set(false)
+    this.hidePassworddToggler() ? (
+      this.hidePassworddToggler.set(false)
     ) : (
-      this.hide.set(true)
+      this.hidePassworddToggler.set(true)
     );
   }
 

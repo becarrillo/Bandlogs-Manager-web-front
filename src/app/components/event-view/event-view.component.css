@@ -1,0 +1,9 @@
+#titleContainer {
+    display: flex;
+    justify-content: space-between;
+}
+
+.table-container {
+    max-height: 15rem;
+    overflow-y: auto;
+}

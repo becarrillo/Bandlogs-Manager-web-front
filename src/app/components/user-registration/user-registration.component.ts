@@ -12,6 +12,7 @@ import { FormSuspenseComponent } from '../form-suspense/form-suspense.component'
 import { UserRole } from '../../enums/user-role';
 import { UserService } from '../../services/user.service';
 import { UserRegistrationSnackBarComponent } from '../user-registration-snack-bar/user-registration-snack-bar.component';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -19,6 +20,7 @@ import { UserRegistrationSnackBarComponent } from '../user-registration-snack-ba
   standalone: true,
   imports: [
     CommonModule,
+    FormSuspenseComponent,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
@@ -35,6 +37,7 @@ import { UserRegistrationSnackBarComponent } from '../user-registration-snack-ba
 })
 export class UserRegistrationComponent {
   userService = inject(UserService);
+  readonly router = inject(Router);
   hide = signal(true);
   loading = signal(false);
   userRegistrationForm = new FormBuilder().group({
@@ -88,6 +91,7 @@ export class UserRegistrationComponent {
             "1 registro exitoso: "
               .concat(response.firstname + ' ' + response.lastname + " / " + `(@${response.nickname})`)
           );
+          this.router.navigateByUrl('/');
         },
         error: (error) => {
           // Handles error

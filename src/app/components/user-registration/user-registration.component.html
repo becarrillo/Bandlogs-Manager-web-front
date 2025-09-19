@@ -7,7 +7,7 @@
         <fieldset>
             <legend>Información personal</legend>
             <div class="form-field-container">
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="fill">
                     <mat-label>apellidos</mat-label>
                     <input
                         inputmode="latin"
@@ -22,7 +22,7 @@
                 </mat-form-field>
             </div>
             <div class="form-field-container">
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="fill">
                     <mat-label>nombre(s)</mat-label>
                     <input
                         inputmode="latin-name"
@@ -37,14 +37,14 @@
                 </mat-form-field>
             </div>
             <div class="form-field-container">
-                <mat-form-field appearance="outline" id="countryCodeField">
+                <mat-form-field appearance="fill" id="countryCodeField">
                     <mat-select formControlName="countryCode" [(value)]="userRegistrationForm.value.countryCode">
                         @for (item of getCountryCodes(); track $index) {
                         <mat-option value={{item}}>{{item}}</mat-option>
                         }
                     </mat-select>
                 </mat-form-field>
-                <mat-form-field appearance="outline" id="phoneNumberField">
+                <mat-form-field appearance="fill" id="phoneNumberField">
                     <mat-label>tel. móvil</mat-label>
                     <input
                         inputmode="tel"
@@ -54,7 +54,7 @@
                         matInput
                     />
                     @if (userRegistrationForm.controls.phoneNumber.invalid) {
-                    <mat-error>campo obligatorio, debe ser conformado por 9 a 15 dígitos</mat-error>
+                    <mat-error>campo obligatorio, de 9 a 15 dígitos</mat-error>
                     }
                 </mat-form-field>
             </div>
@@ -62,7 +62,7 @@
         <fieldset id="userInfo">
             <legend>Información de usuario</legend>
             <div class="form-field-container">
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="fill">
                     <mat-label>nombre de usuario</mat-label>
                     <input
                         inputmode="latin"
@@ -78,7 +78,7 @@
                 </mat-form-field>
             </div>
             <div class="form-field-container">
-                <mat-form-field appearance="outline" id="passwordField">
+                <mat-form-field appearance="fill" id="passwordField">
                     <mat-label>Contraseña</mat-label>
                     <input
                         class="mat-input"
@@ -101,6 +101,6 @@
     </form>
 </ng-container>
 <!-- Loading bands state template when loading signal value changes  -->
-<ng-template #suspenseTemplate>
-    <app-form-suspense text="Procesando..."></app-form-suspense>
+<ng-template #suspenseTemplate id="suspense">
+    <app-form-suspense text="Guardando usuario..."></app-form-suspense>
 </ng-template>

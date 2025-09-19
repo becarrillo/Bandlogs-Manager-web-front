@@ -1,19 +1,21 @@
 #listA {
-    display: grid;
-    width: max-content;
+    display: flex;
+    width: fit-content;
     margin-left: 0;
     background-color: grey;
 }
 
 #listA button {
+    display: flex;
     border-radius: 3px;
     border-width: 2px;
     border-color: rgb(0, 0, 0);
-    padding-left: 2em;
+    padding-left: 4.5em;
     padding-top: 1em;
     padding-bottom: 1em;
-    padding-right: 2em;
+    padding-right: 4.5em;
     background-color: lightgrey;
+    width: 100%;
     text-decoration: none;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
@@ -28,23 +30,14 @@
 
 @media screen and (max-width: 767px) {
     #listA {
-        grid-template-rows: repeat(3, 1fr);
-        row-gap: 1.2em;
+        flex-direction: column;
         justify-self: center;
-    }
-
-    #listA button {
-        width: 90%;
     }
 }
 
 @media screen and (min-width: 768px) {
     #listA {
-        grid-template-columns: repeat(3, 1fr);
-        row-gap: 1rem;
-    }
-
-    #listA button {
-        width: 20vw;
+        flex-direction: row;
+        column-gap: 1rem;
     }
 }

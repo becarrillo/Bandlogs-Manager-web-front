@@ -1,0 +1,123 @@
+<mat-dialog-content>
+    <ng-container *ngIf="!chordNameInputIsShown(); else songProgressionTemplate;">
+        <div id="containerContent">
+            <h6>{{title}} <small>(acordes)</small></h6>
+            <mat-list>
+                @for (chord of reactiveProgression(); track $index) {
+                <mat-list-item>
+                    <div class="item">
+                        <span>
+                            {{
+                            latinTonalityStrPitch(
+                            stringToPitch(chord.replace(chord.substring(chord.indexOf(';')), ''))
+                            .valueOf(),
+                            tonality
+                            )
+                            .concat(chord.substring(chord.indexOf(';')+1))
+                            }}
+                        </span>
+                        <div class="action-btns">
+                            <button mat-icon-button (click)="
+                                chordIndex = $index;
+                                chordName.set(
+                                    latinTonalityStrPitch(
+                                        stringToPitch(chord.replace(chord.substring(chord.indexOf(';')), ''))
+                                        .valueOf(),
+                                        tonality
+                                    )
+                                        .concat(chord.substring(chord.indexOf(';')+1))
+                                );
+                                chordNameInputIsShown.set(true);
+                                formFieldAction.set('edit');
+                            ">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button (click)="chordIndex = $index; removeChord();">
+                                <mat-icon>delete_forever</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                </mat-list-item>
+                @if (!$last) {
+                <mat-divider></mat-divider>
+                }
+                }
+            </mat-list>
+            <button mat-mini-fab color="primary" (click)="chordNameInputIsShown.set(true);formFieldAction.set('add');"
+                aria-label="Añadir acorde" matTooltip="Añadir acorde" class="add-chord-btn">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+    </ng-container>
+
+    <ng-template #songProgressionTemplate>
+        @if (formFieldAction()==='add' && !loading()) {
+        <h6>Añadir acorde</h6>
+        <mat-form-field appearance="fill">
+            <mat-label>Acorde</mat-label>
+            <input matInput [(ngModel)]="chordName" [matAutocomplete]="auto">
+            <mat-autocomplete #auto="matAutocomplete">
+                @for (option of filteredProgressionOptions(); track option) {
+                <mat-option [value]="option.pitch.concat(option.suffix)">{{option.pitch}}{{option.suffix}}</mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+        <div class="action-btns">
+            <button type="button" mat-button (click)="addChord()">ENVIAR</button>
+            <button type="button" mat-icon-button (click)="formFieldAction.set(''); chordNameInputIsShown.set(false);">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+        } @else if (formFieldAction()==='edit' && !loading()) {
+        <h6>Editar acorde</h6>
+        <mat-form-field appearance="fill">
+            <mat-label>Acorde</mat-label>
+            <input matInput [(ngModel)]="chordName" [matAutocomplete]="auto">
+            <mat-autocomplete #auto="matAutocomplete">
+                @for (option of filteredProgressionOptions(); track $index) {
+                <mat-option [value]="
+                            option.pitch.includes('/') &&
+                            (
+                                tonality.startsWith('Lab') ||
+                                tonality.startsWith('Sib') ||
+                                tonality.startsWith('Do') ||
+                                (tonality.startsWith('Rem') && !option.pitch.startsWith('Do#') && !option.pitch.startsWith('Fa#')) ||
+                                tonality.startsWith('Mib') ||
+                                (tonality.startsWith('Solm') && !option.pitch.startsWith('Fa#'))) ? (
+                                    (option.pitch.split('/').at(0)!).concat(option.suffix)
+                            ) : (
+                                    option.pitch.includes('/') ? (option.pitch).split('/').at(1)!.concat(option.suffix) :
+                                    (option.pitch).concat(option.suffix)
+                            )
+                        ">
+                    {{
+                    option.pitch.includes('/') &&
+                    (
+                    tonality.startsWith('Lab') ||
+                    tonality.startsWith('Sib') ||
+                    tonality.startsWith('Do') ||
+                    (tonality.startsWith('Rem') && !option.pitch.startsWith('Do#') && !option.pitch.startsWith('Fa#'))
+                    ||
+                    tonality.startsWith('Mib') ||
+                    (tonality.startsWith('Solm') && !option.pitch.startsWith('Fa#'))) ? (
+                    (option.pitch.split('/').at(0)!).concat(option.suffix)
+                    ) : (
+                    option.pitch.includes('/') ? (option.pitch).split('/').at(1)!.concat(option.suffix) :
+                    (option.pitch).concat(option.suffix)
+                    )
+                    }}
+                </mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+        <div class="action-btns">
+            <button type="button" mat-button (click)="updateChord()">ENVIAR</button>
+            <button type="button" mat-icon-button (click)="formFieldAction.set(''); chordNameInputIsShown.set(false);">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+        } @else {
+        <app-form-suspense text="Espera, procesando..." id="suspense"></app-form-suspense>
+        }
+    </ng-template>
+</mat-dialog-content>

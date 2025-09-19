@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Output, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, OnInit, Output, signal, ViewChild } from '@angular/core';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,44 +9,77 @@ import { MatOptionModule } from '@angular/material/core';
 import { LATIN_STRING_PITCHES, SUFFIXES } from '../../constants';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { map, Observable, startWith } from 'rxjs';
+import { Pitch } from '../../enums/pitch';
+import { MusicalUtilService } from '../../services/musical-util.service';
+
 
 @Component({
   selector: 'app-song-create-form',
   standalone: true,
   imports: [
+    CommonModule,
     FormsModule,
     MatAutocompleteModule,
     MatButtonModule,
+    MatCardModule,
     MatChipsModule,
+    MatDividerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatOptionModule,
+    MatTooltipModule,
     ReactiveFormsModule
-],
+  ],
   templateUrl: './song-create-form.component.html',
   styleUrl: './song-create-form.component.css'
 })
-export class SongCreateFormComponent {
-  protected songCreateForm = new FormBuilder().group({
-      title: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
-      pitch: new FormControl<string>('', [Validators.required]),
-      tonality: new FormControl<string>('', [Validators.required]),
-      progression: new FormControl<string[]>([])
+export class SongCreateFormComponent implements OnInit {
+  musicalUtilService = inject(MusicalUtilService);
+  protected newSongForm = new FormBuilder().group({
+    title: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
+    pitch: new FormControl<string | { pitch: Pitch, suffix: string } | null>(null),
+    tonality: new FormControl<string>('', [Validators.required]),
+    progression: new FormControl<string[]>({ value: [], disabled: true }),
+    progressionChordOption: new FormControl<string>('')
   });
-  protected songs : { title: string, tonality: string, progression: string[]}[] = [];
+  readonly latinStrChordPitch = this.musicalUtilService.formatChordPitch;
+  protected readonly filteredTonalityOptions = signal(this.getLatinStrTonalityOptions());
+  protected progressionOptions = signal<{ pitch: string; suffix: string; }[]>(this.getChords());
+  protected reactiveRepertoire = signal<{ title: string, tonality: string, progression: string[] }[]>([]);
 
-  @Output('song')
-  protected output = new EventEmitter<{ title: string, tonality: string, progression: string[]}>();
+  @Output('repertoire')
+  protected repertoireOutput = new EventEmitter<{ title: string, tonality: string, progression: string[] }[]>();
 
-  @Output('songCreateForm')
-  songCreateFormOutput = new EventEmitter<typeof this.songCreateForm>();
+  @Output()
+  resetStepperEvent = new EventEmitter<boolean>();
 
+  @ViewChild('chordEntry') progressionChordInput!: ElementRef<HTMLInputElement>;
   readonly reactiveKeywords = signal<string[]>([]);
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-  filteredOptions!: string[];
 
-  @ViewChild('songTonalityInput') tonalityInput!: ElementRef<HTMLInputElement>;
+  filteredProgressionOptions!: Observable<{ pitch: string; suffix: string; }[]>;
+
+  ngOnInit(): void {
+    this.filteredProgressionOptions = this.newSongForm.controls.progressionChordOption.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.progressionOptions(), value || ''))
+    );
+  }
+
+  private _filter(options: { pitch: string; suffix: string; }[], value: string) {
+    return options
+      .filter(option => option.pitch
+        .concat(option.suffix)
+        .toLowerCase()
+        .includes(value.toLowerCase())
+      )
+  }
 
   addReactiveChordKeyword(event: MatChipInputEvent) {
     const value = (event.value || '').trim();
@@ -54,56 +87,78 @@ export class SongCreateFormComponent {
     var kewywordIsValid = false;
     LATIN_STRING_PITCHES.forEach(p => {
       const split = p.split('/');
-      if (p===value || value.includes(split.at(0)!) || value.includes(split.at(1)!) || value.includes(p))
+      if (p === value || value.startsWith(split.at(0)!) || value.startsWith(split.at(1)!) || value.startsWith(p))
         kewywordIsValid = true;
     });
     if (kewywordIsValid) {
       this.reactiveKeywords.update(keywords => [...keywords, value]);
-
+      this.newSongForm.controls.progressionChordOption.setValue('');
       // Clear the input value
       event.chipInput!.clear();
     }
   }
 
-  filter(): void {
-    const options : string[] = [];
-    for (let chord of this.getChords()) {
-      options.push(this.formatChordPitch(LATIN_STRING_PITCHES.indexOf(chord.pitch)).concat(chord.suffix));
-    }
-    const filterValue = this.tonalityInput.nativeElement.value.toLowerCase();
-
-    this.filteredOptions = options.filter(o => o.toLowerCase().includes(filterValue));
+  cancelStagedSong(song: { title: string, tonality: string, progression: string[] }) {
+    this.reactiveRepertoire.update(value => {
+      return value.filter(v => v !== song);
+    })
   }
 
-  getChords() {
-    const chords : {pitch : string, suffix: string}[] = [];
-    LATIN_STRING_PITCHES.forEach(pitch => {
-      SUFFIXES.forEach(suffix => {
-        chords.push({ pitch, suffix });
-      });
-    });
-    return chords;
+  getLatinStrTonalityOptions() {
+    const arr = this.getSingleLatinStrTonalityPitches();
+    return arr.map(pitch => {
+      return SUFFIXES.map(suffix => {
+        return { pitch, suffix };
+      })
+    }).flat();
   }
 
   getLatinStrPitches() {
     return LATIN_STRING_PITCHES;
   }
 
+  getChords() {
+    return LATIN_STRING_PITCHES.map(pitch => {
+      return SUFFIXES.map(suffix => {
+        return { pitch, suffix };
+      })
+    }).flat();
+  }
+
+  private getSingleLatinStrTonalityPitches() {
+    return LATIN_STRING_PITCHES.map((value, index) => {
+      if (value.includes('/')) {
+        const split = value.split('/');
+        return index === 1 || index === 6 || index === 11 ? (
+          split.at(1)!
+        ) : (
+          split.at(0)!
+        );
+      } else {
+        return this.newSongForm.value.tonality!.startsWith('Do#') && index === 8 ? 'Fa' : value;
+      }
+    });
+  }
+
+  toStageSong() {
+    const song = {
+      title: this.newSongForm.value.title!,
+      tonality: this.newSongForm.value.tonality!,
+      progression: this.newSongForm.value.progression!
+    }
+
+    this.reactiveRepertoire.update(value => {
+      return [...value, song]
+    });
+    this.filteredTonalityOptions.set(this.getLatinStrTonalityOptions());
+    this.reactiveKeywords.set([]);
+    
+    this.newSongForm.reset();
+    this.newSongForm.controls.progression.disable();
+  }
+
   onSubmit() {
-    this.output.emit(
-      {
-        title: this.songCreateForm.value.title!,
-        tonality: this.songCreateForm.value.tonality!,
-        progression: this.songCreateForm.value.progression!
-      }
-    );
-    /**this.songs.push(
-      {
-        title: this.songCreateForm.value.title!,
-        tonality: this.songCreateForm.value.tonality!,
-        progression: this.songCreateForm.value.progression!
-      }
-    );**/
+    this.repertoireOutput.emit(this.reactiveRepertoire());
   }
 
   removeReactiveChordKeyword(keyword: string) {
@@ -118,93 +173,41 @@ export class SongCreateFormComponent {
     });
   }
 
-  onSelected(event: MatAutocompleteSelectedEvent): void {
-    this.reactiveKeywords.update(keywords => [...keywords, event.option.viewValue]);
-    this.songCreateForm.controls.progression.setValue([]);
-    event.option.deselect();
+  removeStagedReactiveRepertoireChord(songTitle: string, index: number) {
+    this.reactiveRepertoire.update(value => {
+      value.find(s => s.title === songTitle)?.progression.splice(index, 1);
+      return [...value];
+    });
   }
 
-  toggleDisableProgressionControl() {
-    (this.songCreateForm.value.pitch?.length!)>0 ? (
-      this.songCreateForm.controls.progression.enable()
-    ) : (
-      this.songCreateForm.controls.progression.disable()
+  onProgressionChordKeywordSelected(ev: MatAutocompleteSelectedEvent): void {
+    this.reactiveKeywords.update(keywords => [...keywords, ev.option.viewValue]);
+    this.newSongForm.controls.progression.setValue([]);
+    ev.option.deselect();
+    this.filteredProgressionOptions = this.newSongForm.controls.progressionChordOption.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.getChords(), value || '')
+      )
+    );
+    this.progressionChordInput.nativeElement.setAttribute('value', '');
+  }
+
+  onTonalityInputKeyDown(ev: Event) {
+    const inputValue = (ev.target as HTMLInputElement).value;
+    if (inputValue.length>=1 && this.newSongForm.controls.tonality.disabled)
+      this.newSongForm.controls.tonality.enable();
+    this.filteredTonalityOptions.set(
+      this.getLatinStrTonalityOptions().filter(option => {
+        return option.pitch.concat(option.suffix).toLowerCase().includes(inputValue.toLowerCase());
+      })
     );
   }
 
-  /** Converts and translates pitch ordinal number to latin system musical notation string */
-  formatChordPitch(ordinal : number) {
-    switch (ordinal) {
-      case 0: 
-        return "La"
-        break;
-      case 1: 
-        if (
-          !this.songCreateForm.value.pitch?.includes('Re#') &&
-          !this.songCreateForm.value.pitch?.includes('La#') &&
-          !this.songCreateForm.value.pitch?.includes('Sol#')
-          ) {
-            return "La#"
-          }
-        return "Sib"
-        break;
-      case 2:
-        return "Si"
-        break;
-      case 3:
-        return "Do"
-        break;
-      case 4:
-        if (
-          this.songCreateForm.value.pitch?.includes('Sol') ||
-          this.songCreateForm.value.pitch?.includes('La') ||
-          this.songCreateForm.value.pitch?.includes('Re') &&
-          this.songCreateForm.value.pitch?.includes('#')
-        ) {
-          return "Reb"
-        }
-        return "Do#"
-        break;
-      case 5:
-        return "Re"
-        break;
-      case 6:
-        if (
-          !this.songCreateForm.value.pitch?.includes('Fa#') &&
-          !this.songCreateForm.value.pitch?.includes('Do#')
-        ) {
-          return "Mib"
-        }
-        return "Re#"
-        break;
-      case 7:
-        return "Mi"
-        break;
-      case 8:
-        return "Fa"
-        break;
-      case 9:
-        if (
-          (this.songCreateForm.value.pitch?.includes('Re#') ||
-          this.songCreateForm.value.pitch?.includes('Fa#') ||
-          this.songCreateForm.value.pitch?.includes('Sol#'))
-        ) {
-          return "Solb";
-        }
-        return "Fa#";
-        break;
-      case 10:
-        return "Sol"
-        break;
-      default:
-        if (
-          this.songCreateForm.value.pitch?.includes('Re#') ||
-          this.songCreateForm.value.pitch?.includes('Sol#') ||
-          this.songCreateForm.value.pitch?.includes('La#')
-        ) {
-          return "Sol#"
-        }
-        return "Lab";
-    }
+  toggleDisabledOrNotProgressionControl() {
+    this.newSongForm.controls.tonality.valid ? (
+      this.newSongForm.controls.progression.enable()
+    ) : (
+      this.newSongForm.controls.progression.disable()
+    );
   }
 }

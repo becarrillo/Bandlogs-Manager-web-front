@@ -1,50 +1,60 @@
-@if (songs.length>=1) {
-    @for (song of songs; track $index) {
-        {{$index}}. <p>Canción agregada: título -> {{song.title}}, tónica -> {{song.tonality}}, progresión -> {{song.progression}}</p>
+<div *ngIf="reactiveRepertoire().length>=1" ngClass="repertoire-card-container">
+    @for (song of reactiveRepertoire(); track song.title.includes(' ') ? song.title.replace(' ', '_').toUpperCase() :
+    song.title.toUpperCase()) {
+    <mat-card class="repertoire-card" appearance="outlined">
+        <mat-card-header>
+            <mat-card-title>{{song.title}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="content">
+                <span>Tonalidad: {{song.tonality}}</span>
+                <mat-chip-set aria-label="Acordes" class="repertoire-chip-set">
+                    @for (chord of song.progression; track $index) {
+                    <mat-chip ngClass="chord-chip">{{chord}} <button
+                            (click)="removeStagedReactiveRepertoireChord(song.title, $index)"
+                            mat-icon-button><mat-icon>cancel</mat-icon></button></mat-chip>
+                    }
+                </mat-chip-set>
+            </div>
+        </mat-card-content>
+        <mat-card-actions>
+            <div class="action-btns">
+                <button mat-icon-button><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="cancelStagedSong(song)"><mat-icon>delete_forever</mat-icon></button>
+            </div>
+        </mat-card-actions>
+    </mat-card>
     }
-    
-}
-<form [formGroup]="songCreateForm">
-    <fieldset>
-        <legend>Titulo de la canción</legend>
-        <mat-form-field appearance="outline">
-            <mat-label>Agrega el título de la canción</mat-label>
-            <input matInput formControlName="name" placeholder="título" />
-        </mat-form-field>
-    </fieldset>
+</div>
 
+<form [formGroup]="newSongForm" (submit)="onSubmit()" id="songCreateForm">
     <fieldset>
-        <legend>Armonía de la canción</legend>
-        <mat-form-field appearance="outline">
+        <legend>Nueva canción</legend>
+        <mat-form-field appearance="fill">
+            <mat-label>Agrega el título de la canción</mat-label>
+            <input matInput formControlName="title" placeholder="título" />
+        </mat-form-field>
+        <mat-form-field appearance="fill">
             <mat-label>Tonalidad</mat-label>
-            <input matInput [matAutocomplete]="auto" #songTonalityInput formControlName="tonality" (input)="filter()"
-                (focus)="filter()" (change)="songCreateForm.controls.progression.enable()" />
-            <mat-autocomplete requireSelection #auto="matAutocomplete">
-                @for(chord of getChords(); track $index) {
+            <input matInput [matAutocomplete]="auto" formControlName="tonality"
+                (input)="onTonalityInputKeyDown($event)" />
+            <mat-autocomplete requireSelection #auto="matAutocomplete" (optionSelected)="toggleDisabledOrNotProgressionControl()">
+                @for(option of filteredTonalityOptions(); track $index) {
                 <mat-option [value]="
-                        chord.pitch.includes('/') ? (
-                            (chord.pitch.split('/').at(1)!).concat(chord.suffix)
-                        ) : (
-                            (chord.pitch).concat(chord.suffix)
-                        )
+                        option.pitch.concat(option.suffix)
                     ">
                     {{
-                    chord.pitch.includes('/') &&
-                    chord.pitch.split('/').at(0)!=='Fa#' ? (
-                    (chord.pitch.split('/').at(1)!).concat(chord.suffix)
-                    ) : (
-                    (chord.pitch.split('/').at(0)!).concat(chord.suffix)
-                    )
+                        option.pitch.concat(option.suffix)
                     }}
                 </mat-option>
                 }
             </mat-autocomplete>
         </mat-form-field>
 
-        <mat-form-field id="addChord" appearance="outline">
+        <mat-form-field id="addChord" appearance="fill">
             <mat-label>Acordes</mat-label>
             <mat-chip-grid #reactiveChipGrid aria-label="Enter reactive form keywords" formControlName="progression">
-                @for (keyword of reactiveKeywords(); track keyword) {
+                @for (keyword of reactiveKeywords(); track $index) {
                 <mat-chip-row (removed)="removeReactiveChordKeyword(keyword)">
                     {{keyword}}
                     <button matChipRemove [attr.aria-label]="'remove reactive chord: '.concat(keyword)">
@@ -54,17 +64,33 @@
                 }
             </mat-chip-grid>
             <input [matChipInputFor]="reactiveChipGrid" [matAutocomplete]="auto1"
-                [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                (matChipInputTokenEnd)="addReactiveChordKeyword($event)" />
-            <mat-autocomplete #auto1="matAutocomplete" (optionSelected)="onSelected($event)">
-                @for (chord of getChords(); track $index) {
-                <mat-option [value]="
-                            formatChordPitch(getLatinStrPitches().indexOf(chord.pitch)).concat(chord.suffix)
-                        ">
-                    {{formatChordPitch(getLatinStrPitches().indexOf(chord.pitch)).concat(chord.suffix)}}
+                [matChipInputSeparatorKeyCodes]="separatorKeysCodes" #chordEntry
+                formControlName="progressionChordOption" (matChipInputTokenEnd)="addReactiveChordKeyword($event)" />
+            <mat-autocomplete #auto1="matAutocomplete" (optionSelected)="onProgressionChordKeywordSelected($event)">
+                @for (option of filteredProgressionOptions | async; track $index) {
+                <mat-option
+                    [value]="
+                        option.pitch.concat(option.suffix)
+                    ">
+                    {{
+                        option.pitch.concat(option.suffix)
+                    }}
                 </mat-option>
                 }
             </mat-autocomplete>
         </mat-form-field>
+        @if (newSongForm.valid) {
+        <div class="btn-group-container">
+            <button type="button" mat-raised-button matTooltip="Enlista canción al repertorio" (click)="toStageSong()"
+                id="addSongBtn" [disabled]="newSongForm.invalid">
+                Agregar <strong>"{{newSongForm.value.title}}"</strong> al repertorio
+            </button>
+        </div>
+        }
     </fieldset>
+
+    <div id="submitBtnContainer">
+        <button type="submit" mat-stroked-button id="submitBtn"
+            >GUARDAR</button>
+    </div>
 </form>

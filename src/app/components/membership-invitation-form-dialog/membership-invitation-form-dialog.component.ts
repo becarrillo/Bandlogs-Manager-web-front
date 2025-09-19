@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { Band } from '../../interfaces/band';
 import { BandService } from '../../services/band.service';
 import { UserService } from '../../services/user.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -42,8 +43,9 @@ export class MembershipInvitationFormDialogComponent {
   readonly dialogRef = inject(MatDialogRef<MembershipInvitationFormDialogComponent>);
   protected readonly data = inject<{bands: Band[], userNickname: string}>(MAT_DIALOG_DATA);
   private readonly _formBuilder = inject(FormBuilder);
+  private readonly router = inject(Router);
   submitIsEnabled = signal(false);
-  readonly bands = this._formBuilder.group({});
+  readonly bands = this._formBuilder.group<any>({});
 
   private _snackBar = inject(MatSnackBar);
   
@@ -58,7 +60,6 @@ export class MembershipInvitationFormDialogComponent {
   }
 
   enableSubmit() {
-    
     this.submitIsEnabled.set(true);
   }
 
@@ -109,5 +110,6 @@ export class MembershipInvitationFormDialogComponent {
         verticalPosition: "top",
         horizontalPosition: "right"
       });
+    this.dialogRef.close();
   }
 }

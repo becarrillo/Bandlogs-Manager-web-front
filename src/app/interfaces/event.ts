@@ -4,11 +4,11 @@ import { Song } from "./song";
 
 /** to model a event related with a musical band in Bandlogs-Manager */
 export interface Event {
-    eventId : string,
+    eventId : string | null,
     date : Date,
     description : string,
-    location? : string,
-    band : Band,
+    location : string | null,
+    band? : Band,
     repertoire : Song[],
     state? : EventState
 }

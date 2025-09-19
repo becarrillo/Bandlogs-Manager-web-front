@@ -1,0 +1,20 @@
+<mat-dialog-content>
+    <form (submit)="onSubmit()" [formGroup]="updateSongForm">
+        <mat-form-field appearance="fill">
+            <mat-label>Título de la canción</mat-label>
+            <input matInput formControlName="title" placeholder="título" />
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Escoje acorde</mat-label>
+            <select matNativeControl formControlName="tonality" [disabled]="true">
+                <option value="" selected></option>
+                @for (chord of getChords(); track $index) {
+                <option [value]="chord.pitch!.concat(chord.suffix)">
+                    {{chord.pitch!.concat(chord.suffix)}}
+                </option>
+                }
+            </select>
+        </mat-form-field>
+        <button type="button" mat-button>Ver Acordes</button>
+    </form>
+</mat-dialog-content>

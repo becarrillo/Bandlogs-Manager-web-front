@@ -46,9 +46,9 @@ export class EventService {
     );
   }
 
-  addEvent(event : Event) {
+  addEvent(event : Omit<Event, 'eventId'>) {
     const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
+    
     return this.http.post<Event>(
       "http://localhost:8080/api/v1/eventos/agregar",
       event,
@@ -77,7 +77,7 @@ export class EventService {
     const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
     
     return this.http.put<Event>(
-      `http://localhost:8080/api/v1/events/${eventId}/modificar`,
+      `http://localhost:8080/api/v1/eventos/${eventId}/modificar`,
       event,
       {
         headers: {

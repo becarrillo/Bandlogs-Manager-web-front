@@ -1,9 +1,5 @@
-fieldset {
-    display: flex;
-    flex-direction: column;
-    row-gap: 0.3in;
-    padding: 1.5em;
-    margin-bottom: 16px;
+.action-btns {
+    margin-left: auto;
 }
 
 #addChord {
@@ -14,6 +10,103 @@ fieldset {
     display: block;
 }
 
-.submit-btn {
+#addSongBtn {
+    display: inline;
+}
+
+.btn-group-container {
+    display: flex;
+    justify-content: center;
     width: 100%;
+}
+
+#chords {
+    max-width: 21em;
+    overflow-x: auto;
+}
+
+.chord-chip {
+    display: block;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+}
+
+fieldset {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: .25rem;
+    padding: 3.5rem;
+}
+
+mat-form-field {
+    justify-self: center;
+    margin-bottom: 1.6pc;
+    padding-top: .9em;
+}
+
+#reactiveRepertoire > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.repertoire-card {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1.8em;
+    color: whitesmoke;
+}
+
+.repertoire-card-container {
+    display: grid;
+    background: transparent;
+    margin-top: 6vh;
+}
+
+.repertoire-chip-set {
+    row-gap: 1.5rem;
+    justify-content: center;
+    max-height: 10em;
+    overflow-y: auto;
+    padding-top: 8px;
+}
+
+@media screen and (max-width: 767px) {
+    .repertoire-card-container {
+        grid-template-columns: 1fr;
+        row-gap: 0.6rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .repertoire-card-container {
+        grid-template-columns: repeat(4, 1fr);
+        column-gap: 0.6rem;
+    }
+}
+
+#repertoireContainer {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#songCreateForm {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2vh;
+    margin-top: 1.2rem;
+    padding-top: 21pt;
+    color: whitesmoke;
+}
+
+#submitBtn {
+    margin-top: 6px;
+    padding-left: 10em;
+    padding-right: 10em;
+}
+
+#submitBtnContainer {
+    display: flex;
+    justify-content: end;
 }

@@ -27,7 +27,6 @@ export class DashboardIndexComponent {
   userRoleObject! : IUserRole;
   
   constructor() {
-    this.cookieService.delete('loggedInUsername');
     this.authService.getAuthenticatedUserRole()
       .subscribe({
         next: (value) => {

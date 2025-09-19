@@ -1,0 +1,92 @@
+<div>
+    <div id="titleContainer">
+        <h5>Evento: <strong>{{_event.description}}</strong></h5>
+        <button (click)="openDialog(getManagingEventActionEnumType().TO_EDIT)" mat-icon-button><mat-icon>edit</mat-icon></button>
+    </div>
+
+    <div>
+        <p>Fecha: {{_event.date}}</p>
+        <p>Descripción: {{_event.description}}</p>
+        @if (_event.location!==null) {
+        <p>Lugar: {{_event.location}}</p>
+        }
+        <p>
+            Estado: 
+            @switch (_event.state?.toString()) {
+            @case ('PLANNED') {
+            Planeado/Pendiente
+            }
+            @case ('IN_PROGRESS') {
+            En progreso
+            }
+            @case ('COMPLETED') {
+            Completado
+            }
+            @case ('CANCELLED') {
+            Cancelado
+            }
+            }
+        </p>
+    </div>
+
+    <!--<full-calendar [options]="calendarOptions"></full-calendar>-->
+
+    @if (_event.repertoire!==undefined && _event.repertoire.length>=1) {
+    <p><mat-icon>library_music</mat-icon> Repertorio del evento:</p>    
+    <div class="table-container">
+        <table mat-table [dataSource]="_event.repertoire">
+            <!-- Song title Column -->
+            <ng-container matColumnDef="title">
+                <th mat-header-cell *matHeaderCellDef> Título </th>
+                <td mat-cell *matCellDef="let element"> {{element.title}} </td>
+            </ng-container>
+
+            <!-- Song tonality Column -->
+            <ng-container matColumnDef="tonality">
+                <th mat-header-cell *matHeaderCellDef> Tonalidad </th>
+                <td mat-cell *matCellDef="let element">
+                    {{
+                        latinStrTonalityPitch(
+                            convertStringToPitch(element.pitch).valueOf(),
+                            getLatinStrTonality(element.pitch, element.tonalitySuffix)
+                        )
+                            .concat(element.tonalitySuffix ?? '')
+                    }}
+                </td>
+            </ng-container>
+
+            <!-- Symbol Column -->
+            <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef> Acción </th>
+                <td mat-cell *matCellDef="let element">
+                    <button
+                        mat-stroked-button
+                        matTooltip="Ver progresión de acordes"
+                        (click)="openDialog(getManagingEventActionEnumType().TO_VIEW_PROGRESSION_OF_SONG, {
+                                loggedInUserRole,
+                                bandId,
+                                event: _event,
+                                song: element,
+                                title: element.title,
+                                tonality: latinStrTonalityPitch(
+                                    convertStringToPitch(element.pitch).valueOf(),
+                                    getLatinStrTonality(element.pitch, element.tonalitySuffix)
+                                )
+                                    .concat(element.tonalitySuffix)
+                            })
+                        "
+                    >
+                        VER ACORDES
+                    </button>
+                    <button type="button" mat-icon-button (click)="removeSong(element)" [matTooltip]="'Cancelar canción '+element.title.concat(' del evento')">
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="eventRepertoireColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: eventRepertoireColumns;"></tr>
+        </table>
+    </div>
+    }
+</div>

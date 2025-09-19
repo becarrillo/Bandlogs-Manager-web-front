@@ -1,24 +1,16 @@
-#user {
+#description {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 2.25em;
-    padding: 2pc;
-    font-family: Arial, Helvetica, sans-serif;
+    flex-direction: column;
+    row-gap: 5px;
+    text-align: justify;
+    margin-top: 2.5rem;
+    padding-left: 2.25em;
+    padding-right: 2.25em;
 }
 
 #pathTitle {
     font-weight: 600;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-}
-
-#description {
-    display: flex;
-    flex-direction: column;
-    row-gap: 8px;
-    text-align: justify;
-    margin-bottom: 1pc;
-    padding-left: 2.25em;
-    padding-right: 2.25em;
 }
 
 .profile-btn {
@@ -51,7 +43,7 @@
     padding-bottom: 2em;
     padding-right: 2em;
     background-color: lightgrey;
-    justify-content: space-around;
+    justify-content: center;
     width: 16rem;
     text-decoration: none;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
@@ -63,4 +55,9 @@
     transition-duration: 0.45s;
     border-radius: 3px;
     background-color: rgb(208, 248, 235);
+}
+
+span {
+    margin-left: 2.25rem;
+    margin-bottom: 2rem;
 }

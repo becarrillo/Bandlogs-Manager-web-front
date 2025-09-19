@@ -1,6 +1,6 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { Band } from '../../interfaces/band';
-import { MAT_DIALOG_DATA, MatDialogContent } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogContent, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MusicalGenre } from '../../enums/musical-genre';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,14 +15,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { AppComponent } from '../../app.component';
 import { Router } from '@angular/router';
+import { FormSuspenseComponent } from '../form-suspense/form-suspense.component';
+import { AppComponent } from '../../app.component';
 
 @Component({
   selector: 'app-band-update-form-dialog',
   standalone: true,
   imports: [
     CommonModule,
+    FormSuspenseComponent,
     MatAutocompleteModule,
     MatButtonModule,
     MatDialogContent,
@@ -38,9 +40,10 @@ import { Router } from '@angular/router';
   styleUrl: './band-update-form-dialog.component.css'
 })
 export class BandUpdateFormDialogComponent {
-  protected data = inject<{band: Band}>(MAT_DIALOG_DATA);
+  protected data = inject<{ band: Band }>(MAT_DIALOG_DATA);
   protected bandService = inject(BandService);
   protected userService = inject(UserService);
+  protected readonly dialogRef = inject(MatDialogRef<BandUpdateFormDialogComponent>);
   router = inject(Router);
   protected bandUpdateForm = new FormBuilder().group({
     name: new FormControl<string>(this.data.band.name, [Validators.minLength(4)]),
@@ -48,6 +51,7 @@ export class BandUpdateFormDialogComponent {
     director: new FormControl<string>(this.data.band.director)
   });
   filteredUsers = signal<User[]>([]);
+  readonly loading = signal(false);
 
   /** It is used to filter users in the autocomplete input */
   @ViewChild('filterInput') input!: ElementRef<HTMLInputElement>;
@@ -75,14 +79,17 @@ export class BandUpdateFormDialogComponent {
     return MUSICAL_GENRES;
   }
 
-  onMusicalGenreSelection(ev : MatSelectChange) {
+  onMusicalGenreSelection(ev: MatSelectChange) {
     this.bandUpdateForm.controls.musicalGenre.setValue((ev.value as MusicalGenre).valueOf());
   }
 
-  translateGenreToESString(genreStr : string) {
+  translateGenreToESString(genreStr: string) {
     switch (genreStr) {
       case "CLASSICAL":
         return "Música clásica";
+        break;
+      case "COMERCIAL_BALLAD":
+        return "Balada";
         break;
       case "COMERCIAL_JAZZ":
         return "Jazz";
@@ -93,8 +100,13 @@ export class BandUpdateFormDialogComponent {
       case "COMERCIAL_POP":
         return "Pop";
         break;
-      case "COMERCIAL_VALLENATO":
-        return "Vallenato";
+      case "COMERCIAL_LATIN":
+        return "Latino";
+      case "COMERCIAL_MEX":
+        return "Mexicano";
+        break;
+      case "COMERCIAL_CUMBIA_VALLENATO":
+        return "Cumbia/Vallenato";
         break;
       case "FOLKLORIC":
         return "Folclórico";
@@ -112,41 +124,76 @@ export class BandUpdateFormDialogComponent {
 
   onFilterUsersInputFocus() {
     this.userService
-        .listAll()
-        .subscribe(value => {
-          this.filteredUsers.set(value)
-        });
+      .listAll()
+      .subscribe(value => {
+        this.filteredUsers.set(value)
+      });
   }
 
   onSubmit() {
-    var newMember! : User;
+    this.loading.set(true);
+    var newMemberUser: User | null = null;
 
-    const bandId : number = this.data.band.bandId;
+    const bandId: number = this.data.band.bandId;
     const directorUsername = this.bandUpdateForm.controls.director.value;
-    if (directorUsername!==null && directorUsername!==this.data.band.director) {
+    if (directorUsername !== null) {
       this.userService
-          .getUserByNickname(directorUsername)
-          .subscribe({
-            next: (value) => {
-              this.bandUpdateForm.value.director = value.nickname;
-              newMember = value;
-            },
-            error: (err) => {
-                if (err.status===401) {
-                  localStorage.removeItem('accessToken');
-                  AppComponent.userIsAuthenticated.set(false);
-                  window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
-                  this.router.navigateByUrl('/login');
-                }
-            },
-          })
+        .getUserByNickname(directorUsername)
+        .subscribe({
+          next: (value) => {
+            this.bandUpdateForm.value.director = value.nickname;
+            newMemberUser = value;
+          },
+          error: (err) => {
+            if (err.status === 401) {
+              localStorage.removeItem('accessToken');
+              AppComponent.userIsAuthenticated.set(false);
+              window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
+              this.dialogRef.close();
+              this.router.navigateByUrl('/login');
+            } else if (err.status === 500) {
+              window.alert("Error interno del servidor")
+            } else {
+              console.error(err.message);
+            }
+            window.alert(err.message);
+            this.loading.set(false);
+          },
+        });
+      var users: User[] = [];
+      if (!this.data.band.users?.includes(newMemberUser!))
+        users = [...this.data.band.users!, newMemberUser!];
+      else
+        users = this.data.band.users!;
+      this.bandService.updateBand(bandId, {
+        bandId,
+        name: this.bandUpdateForm.value.name!,
+        musicalGenre: this.bandUpdateForm.value.musicalGenre!,
+        director: this.bandUpdateForm.value.director!,
+        users
+      }
+      ).subscribe({
+        next: (value) => {
+          window.alert(`Banda "${value.name}" actualizada correctamente`);
+          this.loading.set(false);
+          this.dialogRef.close();
+          window.location.reload();
+        },
+        error: (err) => {
+          if (err.status === 401) {
+            localStorage.removeItem('accessToken');
+            AppComponent.userIsAuthenticated.set(false);
+            window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
+            this.dialogRef.close();
+            this.router.navigateByUrl('/login');
+          } else if (err.status === 500) {
+            window.alert("Error interno del servidor")
+          }
+          console.error(err.message);
+          window.alert(err.message);
+          this.loading.set(false);
+        },
+      });
     }
-    this.bandService.updateBand(bandId, {
-      bandId,
-      name: this.bandUpdateForm.value.name!,
-      musicalGenre: this.bandUpdateForm.value.musicalGenre!,
-      director: this.bandUpdateForm.value.director!,
-      users: [...this.data.band.users!, newMember]
-    });
   }
 }

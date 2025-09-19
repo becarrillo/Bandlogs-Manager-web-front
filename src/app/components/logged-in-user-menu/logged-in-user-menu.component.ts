@@ -1,7 +1,6 @@
 import { Component, EventEmitter, input, Output } from '@angular/core';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
@@ -10,8 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
   imports: [
     MatButtonModule,
     MatListModule,
-    MatIconModule,
-    RouterLink
+    MatIconModule
   ],
   templateUrl: './logged-in-user-menu.component.html',
   styleUrl: './logged-in-user-menu.component.css'

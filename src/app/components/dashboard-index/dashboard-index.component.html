@@ -1,12 +1,5 @@
-<span id="user">
+<span>
     Bienvenido(a) {{userRoleObject.nickname}}
-    <button
-        mat-mini-fab class="profile-btn"
-        matTooltip="Mi perfil"
-        [routerLink]="['/dashboard/usuarios/usuario', {'nombre-de-usuario': userRoleObject.nickname}]"
-    >
-    <mat-icon>person</mat-icon>
-  </button>
 </span>
 <div id="description">
     <h5 id="pathTitle">Dashboard de Bandlogs Manager</h5>
@@ -15,20 +8,31 @@
     </p>
 </div>
 <mat-list role="list" id="listA">
+    @if (userRoleObject.role.toString()==='ROLE_ADMIN') {
     <mat-list-item role="listitem">
         <button routerLink="/dashboard/usuarios" class="menu-item-btn" mat-flat-button>
-            <mat-icon>person</mat-icon> Gestión Usuario(s)
+            <mat-icon>people_outline</mat-icon> Gestión Usuario(s)
         </button>
     </mat-list-item>
-    
     <mat-list-item role="listitem">
         <button routerLink="/dashboard/bandas" class="menu-item-btn" mat-flat-button>
-            <mat-icon>people</mat-icon> Gestión Bandas
+            <mat-icon>group</mat-icon> Gestión Bandas
+        </button>
+    </mat-list-item>
+    }
+    @else {
+    <mat-list-item role="listitem">
+        <button routerLink="/dashboard/bandas" class="menu-item-btn" mat-flat-button>
+            <mat-icon>group</mat-icon> Mis Bandas
         </button>
     </mat-list-item>
     <mat-list-item role="listitem">
-        <button routerLink="/dashboard/eventos" class="menu-item-btn" mat-flat-button>
-            <mat-icon>book</mat-icon> Gestión Eventos
+        <button
+            [routerLink]="['/dashboard/usuarios/usuario', {'nombre-de-usuario': userRoleObject.nickname}]"
+            class="menu-item-btn" mat-flat-button
+        >
+            <mat-icon>person</mat-icon> Mi perfil
         </button>
     </mat-list-item>
+    }
 </mat-list>

@@ -18,6 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { UserService } from '../../services/user.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from '../../interfaces/user';
+import { ManageBandsComponent } from '../manage-bands/manage-bands.component';
 
 @Component({
   selector: 'app-band-create-form-dialog',
@@ -48,6 +49,7 @@ export class BandCreateFormDialogComponent {
       loading: WritableSignal<boolean>,
       cookieService: CookieService
     }>(MAT_DIALOG_DATA);
+  readonly _snackBar = inject(MatSnackBar);
   protected bandCreateForm = new FormBuilder().group({
     name: new FormControl<string>('', [Validators.required, Validators.minLength(4)]),
     musicalGenre: new FormControl<MusicalGenre>(MusicalGenre.OTHER, [Validators.required])
@@ -55,124 +57,130 @@ export class BandCreateFormDialogComponent {
   dialogRef = inject(MatDialogRef<BandCreateFormDialogComponent>)
   loading = signal(false);
 
-  _snackBar = inject(MatSnackBar);
-  
   getMusicalGenres() {
-      return MUSICAL_GENRES;
-    }
-  
-    onMusicalGenreSelection(ev : MatSelectChange) {
-      this.bandCreateForm.controls.musicalGenre.setValue((ev.value as MusicalGenre).valueOf());
-    }
-  
-    translateGenreToESString(genreStr : string) {
-      switch (genreStr) {
-        case "CLASSICAL":
-          return "Música clásica";
-          break;
-        case "COMERCIAL_JAZZ":
-          return "Jazz";
-          break;
-        case "COMERCIAL_ROCK":
-          return "Rock";
-          break;
-        case "COMERCIAL_POP":
-          return "Pop";
-          break;
-        case "COMERCIAL_VALLENATO":
-          return "Vallenato";
-          break;
-        case "FOLKLORIC":
-          return "Folclórico";
-          break;
-        case "AFRO_MUSIC":
-          return "Africano";
-          break;
-        case "EXPERIMENTAL":
-          return "Música experimental";
-          break;
-        default:
-          return "Otro";
-      }
-    }
+    return MUSICAL_GENRES;
+  }
 
-    onSubmit() {
-      if (this.bandCreateForm.valid) {
-        this.loading.set(true);
-        // Logic to handle form submission, e.g., call a service to create a band
-        var directorUser! : User;
-        this.userService
-            .getUserByNickname(this.data.loggedInUsername)
-            .subscribe({
-              next: (user) => {
-                directorUser = user;
-                this.data.cookieService.set('navigation', '/dashboard/bandas');
-              },
-              error: (err) => {
-                console.error('Error fetching user:', err);
-                this._snackBar.open('Error al obtener el usuario', 'Cerrar', {
-                  duration: 3000,
-                  panelClass: ['error-snackbar']
-                });
-                this.loading.set(false);
-              }
-            });
-        this.bandService
-            .saveBand({
-              name: this.bandCreateForm.value.name!,
-              musicalGenre: this.bandCreateForm.value.musicalGenre!
-            })
-            .subscribe({
-              next: (response) => {
-                this.patchMemberUserToBand(response.bandId, directorUser);
-                this._snackBar.open(`Banda "${response.name}" creada exitosamente`, 'Cerrar', {
-                  duration: 3000,
-                  panelClass: ['success-snackbar']
-                });
-              },
-              error: (error) => {
-                console.error('Error creating band:', error);
-                if (error.status === 401) {
-                  localStorage.removeItem('accessToken');
-                  AppComponent.userIsAuthenticated.set(false);
-                  window.alert(
-                    "No estás autenticado (sesión expirada), para realizar la acción vuelve a ingresar"
-                  );
-                  this.dialogRef.close();
-                  this.data.loading.set(false);
-                  this.router.navigateByUrl('/login');
-                } else {
-                  this._snackBar.open('Hubo un error generado al crear la banda', 'Cerrar', {
-                    duration: 3000,
-                    panelClass: ['error-snackbar']
-                  });
-                  this.bandCreateForm.reset();
-                  this.data.loading.set(false);
-                }
-              }
-            });
-      } else {
-        console.error('Form is invalid');
-      }
-    }
+  onMusicalGenreSelection(ev: MatSelectChange) {
+    this.bandCreateForm.controls.musicalGenre.setValue((ev.value as MusicalGenre).valueOf());
+  }
 
-    private patchMemberUserToBand(bandId: number, user: User) {
+  translateGenreToESString(genreStr: string) {
+    switch (genreStr) {
+      case "CLASSICAL":
+        return "Música clásica";
+        break;
+      case "COMERCIAL_BALLAD":
+        return "Balada";
+        break;
+      case "COMERCIAL_JAZZ":
+        return "Jazz";
+        break;
+      case "COMERCIAL_ROCK":
+        return "Rock";
+        break;
+      case "COMERCIAL_POP":
+        return "Pop";
+        break;
+      case "COMERCIAL_LATIN":
+        return "Latino";
+      case "COMERCIAL_MEX":
+        return "Mexicano";
+        break;
+      case "COMERCIAL_CUMBIA_VALLENATO":
+        return "Cumbia/Vallenato";
+        break;
+      case "FOLKLORIC":
+        return "Folclórico";
+        break;
+      case "AFRO_MUSIC":
+        return "Africano";
+        break;
+      case "EXPERIMENTAL":
+        return "Música experimental";
+        break;
+      default:
+        return "Otro";
+    }
+  }
+
+  onSubmit() {
+    if (this.bandCreateForm.valid) {
+      this.loading.set(true);
+      // Logic to handle form submission, e.g., call a service to create a band
+      var directorUser!: User;
+      this.userService
+        .getUserByNickname(this.data.loggedInUsername)
+        .subscribe({
+          next: (user) => {
+            directorUser = user;
+          },
+          error: (err) => {
+            onError(err)
+          }
+        });
       this.bandService
-          .patchMemberUserToBand(bandId, user)
-          .subscribe({
-            next: () => {
-              this.bandCreateForm.reset();
-              this.data.loading.set(false);
-              this.loading.set(false);
-              this.dialogRef.close();
-            },
-            error: (error) => {
-              console.error('Error adding director user to band:', error);
-              this._snackBar.open('Error al agregar el director a la banda', 'Cerrar', {
-                duration: 3000,
-                panelClass: ['error-snackbar']
-              });
-            }
-          });
+        .saveBand({
+          name: this.bandCreateForm.value.name!,
+          musicalGenre: this.bandCreateForm.value.musicalGenre!
+        })
+        .subscribe({
+          next: (value) => {
+            this.patchMemberUserToBand(value.bandId, directorUser);
+            this.dialogRef.close();
+          },
+          error: (err) => {
+            onError(err)
+          }
+        });
+    } else {
+      console.error('Form is invalid');
     }
+    const onError = (err: any) => {
+      this.loading.set(false);
+      console.error('Error creating band:', err);
+      if (err.status === 401) {
+        localStorage.removeItem('accessToken');
+        AppComponent.userIsAuthenticated.set(false);
+        window.alert(
+          "No estás autenticado (sesión expirada), para realizar la acción vuelve a ingresar"
+        );
+        this.dialogRef.close();
+        this.data.loading.set(false);
+        this.router.navigateByUrl('/login');
+      } else {
+        this._snackBar.open('Hubo un error al intentar crear la banda', 'Cerrar', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        this.bandCreateForm.reset();
+        this.data.loading.set(false);
+      }
+    }
+  }
+
+  private patchMemberUserToBand(bandId: number, user: User) {
+    this.bandService
+      .patchMemberUserToBand(bandId, user)
+      .subscribe({
+        next: (value) => {
+          this.bandCreateForm.reset();
+          this.data.loading.set(false);
+          this.loading.set(false);
+          this._snackBar.open(`Banda "${value.name}" creada exitosamente`, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.dialogRef.close();
+          window.location.reload();
+        },
+        error: (error) => {
+          console.error('Error adding director user to band:', error);
+          this._snackBar.open('Error al agregar el director a la banda', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+        }
+      });
+  }
 }

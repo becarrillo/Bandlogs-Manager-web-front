@@ -100,7 +100,7 @@ export class BandService {
     );
   }
 
-  patchEventToBand(bandId: number, event : Event) {
+  patchEventToBand(bandId: number, event : Omit<Event, 'eventId'>) {
     const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
 
     return this.http.patch<Band>(
@@ -122,6 +122,18 @@ export class BandService {
       {
         headers: {'Authorization': AUTHORIZATION_HEADER_VALUE,
           'Content-Type': 'application/json;charset=utf-8'}
+      }
+    );
+  }
+
+  removeBandMemberUser(bandId: number, memberUser : User) {
+    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
+
+    return this.http.put<Band>(
+      `http://localhost:8080/api/v1/bandas/${bandId}/usuarios/eliminar`,
+      memberUser,
+      {
+        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}
       }
     );
   }

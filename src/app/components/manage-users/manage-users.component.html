@@ -1,6 +1,6 @@
 <ng-container *ngIf="!loading(); else suspenseTemplate">
   <span id="user">
-    Bienvenido(a), {{getLoggedInUsername()}}
+    Bienvenido(a), {{userRoleObject.nickname}}
     <button
       mat-mini-fab
       class="profile-btn"
@@ -52,7 +52,7 @@
       </form>
     }
     @if (allUsers != null) {
-      <h6 id="pathTitle">Tabla Usuario(s)</h6>
+      <h6 id="pathTitle">Resultado</h6>
       <div id="tableContainer">
         <table mat-table [dataSource]="dataSource">
           <!-- Position Column -->

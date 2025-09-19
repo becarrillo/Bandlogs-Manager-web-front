@@ -17,14 +17,16 @@
             <mat-icon>list_items</mat-icon> Listar
         </button>
     </mat-list-item>
+    @if (section()==='bandas') {
     <mat-list-item role="listitem">
         <button
-            routerLink="/dashboard/bandas/estadisticas"
             class="menu-item-btn"
             (click)="onMenuButtonClick('estadísticas')"
             mat-flat-button
         >
-            <mat-icon>bar_chart</mat-icon> Estadísticas
+            <mat-icon>trending_up</mat-icon> Estadísticas
         </button>
     </mat-list-item>
+    }
+    
 </mat-list>

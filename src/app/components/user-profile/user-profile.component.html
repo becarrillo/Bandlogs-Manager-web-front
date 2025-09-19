@@ -1,6 +1,6 @@
 <ng-container *ngIf="!loading(); else suspenseTemplate">
     <div id="profile">
-        @if (user!==null && user.nickname === getLoggedInUsername()) {
+        @if (user!==null && user.nickname === loggedInUserRole.nickname) {
             <div id="titleContainer">
                 <h5>Usuario <strong class="nickname">{{user.nickname}}</strong> en Bandlogs</h5>
                 <button (click)="openDialog()" mat-icon-button><mat-icon>edit</mat-icon></button>
@@ -13,7 +13,7 @@
         <p>nombre(s): {{user!.firstname}}</p>
         <p>teléfono: {{user!.phoneNumber}}</p>
         <p>nombre usuario: <span class="nickname">{{user!.nickname}}</span></p>
-        @if (bands.length>=1 && user!.nickname !== getLoggedInUsername()) {
+        @if (bands.length>=1 && user!.nickname !== loggedInUserRole.nickname) {
             <div id="bandControl">
                 <p>¿Quieres agregar el usuario a una banda que diriges?</p>
                 <mat-form-field>

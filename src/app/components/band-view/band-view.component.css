@@ -1,20 +1,26 @@
-.example-container {
+.actions {
+    display: flex;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.band-container {
+    display: flex;
+    flex-direction: column;
     background-color: transparent;
-    min-height: 100vh;
+    width: fit-content;
+    overflow-x: auto;
 }
 
 .side-menu {
     display: flex;
-    flex-direction: column;
-    width: 3.5em;
+    padding: 2.5em 3em 2.5em 3em;
 }
 
 .side-menu-list {
     display: flex;
-    flex-direction: column;
-    margin-top: 8em;
     padding: 0%;
-    row-gap: 1.8pc;
+    column-gap: 3pc;
 }
 
 .side-menu-list > mat-list-item {
@@ -40,16 +46,49 @@ button {
 }
 
 button:hover {
-    scale: 118%;
+    scale: 106%;
 }
 
 #content {
     display: flex;
     flex-direction: column;
-    padding: 4.5vw 3vw;
+    margin-top: 0.5rem;
+    padding: 2.5em 3em 2.5em 3em;
     justify-content: center;
     row-gap: 2rem;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-lastname {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-firstname {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-nickname {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-phoneNumber {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-action {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-date {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-description {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.mat-column-location {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 .text-dark {
@@ -61,5 +100,5 @@ button:hover {
 }
 
 .user-link {
-    color: rgb(113, 167, 192);
+    color: lightblue;
 }

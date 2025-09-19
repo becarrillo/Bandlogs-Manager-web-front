@@ -1,0 +1,28 @@
+<ng-container *ngIf="!loading(); else suspenseTemplate">
+  <span>Hola, {{userRoleObject.nickname}}. Estás en:</span>
+  <h5>Estadísticas</h5>
+  @if (resourceIsFilteredToCurrentMonth()) {
+  <span>Mis eventos por banda, mes {{getDate().getMonth()+1}}/{{getDate().getFullYear()}}:</span>
+  } @else {
+  <span>Eventos por banda, general:</span>
+  }
+  <div class="chart-container">
+    <ngx-charts-advanced-pie-chart class="chart" [view]="view" scheme="flame" [results]="results()" [gradient]="true"
+      (select)="onSelect($event)">
+    </ngx-charts-advanced-pie-chart>
+    <p id="toggleBtnParagraph">
+      <mat-slide-toggle
+        (toggleChange)="onToggleChange()"
+        [(ngModel)]="resourceIsFilteredToCurrentMonth"
+        labelPosition="before"
+        [disabled]="!resourceIsFilteredToCurrentMonth && getBandsLength()===0"
+      > 
+        Cambiar al mes actual
+      </mat-slide-toggle>
+    </p>
+  </div>
+</ng-container>
+<!-- Loading bands state template when loading signal value changes  -->
+<ng-template #suspenseTemplate>
+  <app-form-suspense text="Cargando..." id="suspense"></app-form-suspense>
+</ng-template>

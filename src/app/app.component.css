@@ -1,7 +1,14 @@
 #container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     min-height: 100%;
+    overflow-y: auto;
+    position: relative;
+}
+
+@media screen and (min-width: 768px) {
+    #container {
+        place-items: center;
+    }
 }
 
 #container > nav {
@@ -22,8 +29,9 @@
 
 #buttonToggle {
     position: fixed;
-    bottom: .5em;
+    bottom: .425rem;
     display: flex;
     background-color: rgb(177, 146, 61);
     width: auto;
+    transition: all 0.3s ease;
 }

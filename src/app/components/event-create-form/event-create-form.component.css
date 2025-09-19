@@ -6,16 +6,22 @@ form {
     display: flex;
     flex-direction: column;
     row-gap: 1.6pc;
-    margin-top: 3vh;
+    margin-top: 9vh;
+    margin-bottom: 7vh;
+    padding-top: 14pt;
+    color: whitesmoke;
 }
 
-
-
-#fields {
-    padding: 1.6rem;
+.fields {
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     row-gap: 1vw;
+    padding: 3.5rem;
+}
+
+mat-form-field {
+    margin-left: 5vw;
 }
 
 p {
@@ -23,11 +29,37 @@ p {
 }
 
 .stepper {
-    min-height: 100vh;
+    height: 100%;
+}
+
+.stepper > mat-step {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+#addRepertoireBtn {
+    padding-left: 12em;
+    padding-right: 12em;
+}
+
+#addRepertoireBtnContainer {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+}
+
+mat-form-field {
+    margin-bottom: 1.6pc;
+    padding-top: .9em;
 }
 
 .step-action-btns {
     display: flex;
-    justify-self: end;
-    column-gap: 1.2em;
+    margin-top: 2rem;
+    width: 20vw;
+}
+
+#previuosBtn {
+    
+    width: 100%;
 }

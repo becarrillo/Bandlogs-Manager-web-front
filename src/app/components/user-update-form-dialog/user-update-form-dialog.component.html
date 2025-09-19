@@ -28,7 +28,7 @@
         <mat-form-field appearance="outline">
             <mat-label>Nueva contraseña</mat-label>
             <input
-                [type]="hide() ? 'password' : 'text'"
+                [type]="hidePassworddToggler() ? 'password' : 'text'"
                 matInput
                 formControlName="password"
             />
@@ -37,10 +37,10 @@
                 matSuffix
                 (click)="toggleHidePassword($event)"
                 [attr.aria-label]="'Hide password'"
-                [attr.aria-pressed]="hide()"
+                [attr.aria-pressed]="hidePassworddToggler()"
                 [disabled]="!userUpdateForm.get('enablePasswordCheckbox')?.value"
             >
-                <mat-icon>{{hide() ? 'visibility_off' : 'visibility'}}</mat-icon>
+                <mat-icon>{{hidePassworddToggler() ? 'visibility' : 'visibility_off'}}</mat-icon>
             </button>
         </mat-form-field>
         <mat-form-field appearance="outline">

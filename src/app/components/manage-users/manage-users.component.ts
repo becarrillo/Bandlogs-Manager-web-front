@@ -113,10 +113,6 @@ export class ManageUsersComponent {
       });
   }
 
-  getLoggedInUsername() : string {
-    return this.cookieService.get('loggedInUsername');
-  }
-
   getSectionName() {
     return "users";
   }

@@ -24,20 +24,31 @@
         </div>
       </mat-card-footer>
       } @else {
-      <p>Como administrador puedes obtener el listado de todas las bandas registradas en Bandlogs-Manager</p>
+      <mat-card-content>
+        <p>Como administrador puedes obtener el listado de todas las bandas registradas en Bandlogs-Manager</p>
+      </mat-card-content>
+      <mat-card-footer>
+        <div>
+          <button routerLink="/dashboard" mat-button>Regresar al menú</button>
+          <button routerLink="/" mat-button>Ir al Home</button>
+        </div>
+      </mat-card-footer>
       }
     </mat-card>
-    <app-logged-in-user-menu section="bands" (menuItemEmitter)="handleMenuItem($event)">
+    <app-logged-in-user-menu section="bandas" (menuItemEmitter)="handleMenuItem($event)">
     </app-logged-in-user-menu>
-    @if(allBands.length >= 1) {
-    <p id="longText">{{longText}}</p>
-    <button routerLink="dashboard/bandas/crear" mat-mini-fab id="addBandBtn" matTooltip="Agregar banda" (click)="openFormDialog(getManagingBandEnumType().TO_CREATE, {
+    
+    <p id="longText" *ngIf="bandsAreListed() && _bands.length >= 1">{{longText}}</p>
+    <button mat-mini-fab id="addBandBtn" matTooltip="Agregar banda" (click)="openFormDialog(getManagingBandEnumType().TO_CREATE, {
             loggedInUsername: userRoleObject.nickname,
             loading,
             cookieService
-        })">
+        }
+      )"
+    >
       <mat-icon>add</mat-icon>
     </button>
+    @if(bandsAreListed() && _bands.length >= 1) {
     <div id="tableContainer">
       <table mat-table [dataSource]="dataSource">
         <!-- Name Column -->
@@ -51,7 +62,7 @@
           <th mat-header-cell *matHeaderCellDef> Director </th>
           <td mat-cell *matCellDef="let element">
             <a [routerLink]="['/dashboard/usuarios/usuario', {'nombre-de-usuario': element.director}]"
-              class="user-link">
+              ngClass="user-link">
               {{element.director}}
             </a>
           </td>
@@ -60,13 +71,61 @@
         <!-- Name Column -->
         <ng-container matColumnDef="musicalGenre">
           <th mat-header-cell *matHeaderCellDef> Género musical </th>
-          <td mat-cell *matCellDef="let element"> {{element.musicalGenre.toString()}} </td>
+          <td mat-cell *matCellDef="let element"> {{translateGenreToESString(element.musicalGenre.toString())}} </td>
         </ng-container>
 
         <!-- Name Column -->
         <ng-container matColumnDef="action">
-          <th mat-header-cell *matHeaderCellDef> Acción </th>
+          <th mat-header-cell *matHeaderCellDef> 
+            <div id="actionColumnHeadBtnContainer">
+              <span>Acción</span>
+              <button
+                mat-icon-button
+                class="filter-action-btn"
+                [matMenuTriggerFor]="menu"
+                matTooltip="Filtro por rol de banda"
+              >
+                <mat-icon>filter_list</mat-icon> <small>filtrar</small>
+              </button>
+              <mat-menu #menu="matMenu">
+                @if (userRoleObject.role.toString()==='ROLE_ADMIN') {
+                <button
+                  mat-menu-item
+                  (click)="loading.set(true); fetchBands();"
+                  [disabled]="allBandsAreListedAsAdmin"
+                >
+                  Todas las bandas registradas
+                </button>
+                <button
+                  mat-menu-item
+                  (click)="filterBandsByUserAsMember(userRoleObject.nickname)"
+                  [disabled]="!allBandsAreListedAsAdmin && !bandsAreFilteredByDirector"
+                >
+                  Bandas donde soy miembro
+                </button>
+                } @else {
+                <button
+                  mat-menu-item
+                  (click)="loading.set(true); fetchBands();"
+                  [disabled]="!bandsAreFilteredByDirector"
+                >
+                  Bandas donde soy miembro
+                </button>
+                }
+                <button
+                  mat-menu-item
+                  (click)="filterBandsByUserAsDirector(userRoleObject.nickname)"
+                  [disabled]="bandsAreFilteredByDirector"
+                >
+                  Bandas donde soy director
+                </button>
+              </mat-menu>
+            </div>
+          </th>
           <td mat-cell *matCellDef="let element">
+            <button [routerLink]="'/dashboard/bandas/'.concat(element.bandId)" mat-stroked-button>
+              DETALLES
+            </button>
             @if (userRoleObject.role.toString()==='ROLE_ADMIN') {
             <button class="band-delete" (click)="openFormDialog(
                     getManagingBandEnumType().TO_DELETE, {
@@ -94,9 +153,6 @@
             
             }
             }
-            <button [routerLink]="'/dashboard/bandas/'.concat(element.bandId)" mat-stroked-button>
-              DETALLES
-            </button>
           </td>
         </ng-container>
 
@@ -104,8 +160,11 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
     </div>
-    } @else {
-    <p class="result-msg">0 Resultado(s) de tus bandas asociadas</p>
+    }
+    @else {
+      @if (bandsAreListed()) {
+        <p>No estás asociado a banda alguna, o no eres director.</p>
+      }
     }
     @if(userRoleObject.role.toString()!=='ROLE_ADMIN') {
     <mat-card class="card" appearance="outlined">
@@ -144,10 +203,7 @@
             </mat-error>
           </mat-form-field>
           <button type="button" id="search" [disabled]="userNicknameControl.invalid" (click)="openFormDialog(
-              getManagingBandEnumType().TO_ADD_MEMBER_TO_BAND, {
-                bands: allBands,
-                userNickname: userNicknameControl.value
-              })
+              getManagingBandEnumType().TO_ADD_MEMBER_TO_BAND)
             " mat-mini-fab>
             <mat-icon>add</mat-icon>
           </button>

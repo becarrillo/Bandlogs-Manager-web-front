@@ -2,12 +2,24 @@
     display: grid;
     grid-template-rows: 1fr 1fr 1fr;
     row-gap: 4px;
-    margin-top: 3pc;
+    padding-top: 1vh;
     align-items: center;
     justify-self: center;
     justify-content: center;
-    width: 56vw;
     border-radius: 7px;
+    background-color: rgb(63, 65, 59);
+}
+
+@media screen and (max-width: 767px) {
+    #loginForm {
+        width: 74vw;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #loginForm {
+        width: 33vw;
+    }
 }
 
 .form-field-container {
@@ -16,12 +28,13 @@
 
 .form-field {
     padding-top: 15px;
+    width: 100%;
 }
 
 h5 {
     display: flex;
     justify-content: center;
-    margin-top: 6rem;
+    margin-top: 9rem;
     margin-bottom: 1rem;
     font-weight: 600;
 }

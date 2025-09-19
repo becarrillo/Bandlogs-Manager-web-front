@@ -6,7 +6,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { EventService } from '../../services/event.service';
 import { BandService } from '../../services/band.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Band } from '../../interfaces/band';
 import { Song } from '../../interfaces/song';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,14 +22,22 @@ import { MatChipsModule } from '@angular/material/chips';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { LATIN_STRING_PITCHES } from '../../constants';
 import { Pitch } from '../../enums/pitch';
-import { SongViewComponent } from '../song-view/song-view.component';
+import { Event } from '../../interfaces/event';
+import { FormSuspenseComponent } from '../form-suspense/form-suspense.component';
+import { CommonModule } from '@angular/common';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MusicalUtilService } from '../../services/musical-util.service';
+import { AuthService } from '../../services/auth.service';
+import { IUserRole } from '../../interfaces/i-user-role';
 
 
 @Component({
   selector: 'app-event-create-form',
   standalone: true,
   imports: [
+    CommonModule,
     FormsModule,
+    FormSuspenseComponent,
     MatAutocompleteModule,
     MatButtonModule,
     MatChipsModule,
@@ -39,6 +47,7 @@ import { SongViewComponent } from '../song-view/song-view.component';
     MatIconModule,
     MatInputModule,
     MatOptionModule,
+    MatSnackBarModule,
     MatStepperModule,
     MatTooltipModule,
     ReactiveFormsModule,
@@ -49,61 +58,66 @@ import { SongViewComponent } from '../song-view/song-view.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EventCreateFormComponent {
-  eventService = inject(EventService);
-  bandService = inject(BandService);
+  private readonly eventService = inject(EventService);
+  private readonly bandService = inject(BandService);
+  private readonly authService = inject(AuthService);
+  readonly musicalUtilService = inject(MusicalUtilService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  dialog = inject(MatDialog);
+  readonly _snackbar = inject(MatSnackBar);
   cookieService = inject(CookieService);
+
   protected bandSignal = signal<Band | undefined>(undefined);
   protected eventCreateForm = new FormBuilder().group({
     date: new FormControl<Date | null>(null, [Validators.required]),
-    location: new FormControl<string | null>(''),
+    location: new FormControl<string | null>(null),
     description: new FormControl<string | null>('', [Validators.required, Validators.minLength(5)]),
     repertoire: new FormControl<string[]>([])
   });
   protected songCreateForm: FormGroup<{
     title: FormControl<string | null>,
-    pitch: FormControl<string | null>,
+    pitch: FormControl<string | { pitch: Pitch, suffix: string } | null>,
     tonality: FormControl<string | null>,
-    progression: FormControl<string[] | null>
+    progression: FormControl<string[] | null>,
+    progressionChordOption: FormControl<string | null>
   }> = new FormGroup({
-    title: new FormControl<string | null>(null),
-    pitch: new FormControl<string | null>(null),
-    tonality: new FormControl<string | null>(null),
-    progression: new FormControl<string[] | null>(null)
+    title: new FormControl<string | null>(null, Validators.required),
+    pitch: new FormControl<string | { pitch: Pitch, suffix: string } | null>(null, Validators.required),
+    tonality: new FormControl<string | null>(null, Validators.required),
+    progression: new FormControl<string[] | null>(null, Validators.required),
+    progressionChordOption: new FormControl<string | null>('')
   });
-  protected songsSignal = signal<{title: string, tonality: string, progression: string[]}[]>([]);
-
-  dialog = inject(MatDialog);
+  protected songsSignal = signal<{ title: string, tonality: string, progression: string[] }[]>([]);
 
   readonly reactiveKeywords = signal(this.songsSignal().map(value => value.title));
+  readonly loading = signal<boolean>(false);
 
   announcer = inject(LiveAnnouncer);
 
   constructor() {
     this.route.paramMap.subscribe(params => {
       const bandId = params.get('id-de-banda');
-      if (bandId!== null) {
+      if (bandId !== null) {
         this.bandService.getBandById(parseInt(decodeURI(bandId))).subscribe({
           next: (band: Band) => {
             this.bandSignal.set(band);
           },
           error: (err) => {
-            console.error('Error al obtener la banda:', err);
             if (err.status === 404) {
               window.alert('Banda no encontrada. Por favor, verifica el ID de la banda.');
             }
             else if (err.status === 500) {
               window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
-            } else if (err.status===401) {
+            } else if (err.status === 401) {
               window.alert('No tienes permiso para acceder a esta banda. Por favor, inicia sesión.');
               localStorage.removeItem('accessToken');
               this.cookieService.delete('navigation');
               AppComponent.userIsAuthenticated.set(false);
-              window.location.pathname = "/login";
+              this.router.navigateByUrl("/login");
             } else {
-              console.error('Error desconocido:', err);
+              window.alert('Error desconocido, No se pudo cargar la información de la banda.');
             }
-            window.alert('No se pudo cargar la información de la banda. Inténtalo de nuevo más tarde.');
           }
         });
       }
@@ -115,147 +129,146 @@ export class EventCreateFormComponent {
     }, { allowSignalWrites: true });
   }
 
-  protected addSong(song : {title: string, tonality: string, progression: string[]}) {
-    this.songsSignal.update(value => {
-      return [...value, song]
-    });
-  }
-
-  protected getSongByTitle(title : string) {
+  protected getSongByTitle(title: string) {
     return this.songsSignal()
-        .find(value => {
-          return value.title===title;
-        });
+      .find(value => {
+        return value.title === title;
+      });
   }
 
-  private getPitch(ordinal : number, resultType : 'string' | 'Pitch') {
-    switch(ordinal) {
-      case 0:
-        return resultType==='Pitch' ? Pitch.A : "A";
-      case 1:
-        return resultType==='Pitch' ? Pitch.A_SHARP : "A_SHARP";
-      case 2:
-        return resultType==='Pitch' ? Pitch.B : "B";
-      case 3:
-        return resultType==='Pitch' ? Pitch.C : "C";
-      case 4:
-        return resultType==='Pitch' ? Pitch.C_SHARP : "C_SHARP";
-      case 5:
-        return resultType==='Pitch' ? Pitch.D : "D";
-      case 6:
-        return resultType==='Pitch' ? Pitch.D_SHARP : "D_SHARP";
-      case 7:
-        return resultType==='Pitch' ? Pitch.E : "E";
-      case 8:
-        return resultType==='Pitch' ? Pitch.F : "F";
-      case 9:
-        return resultType==='Pitch' ? Pitch.F_SHARP : "F_SHARP";
-      case 10:
-        return resultType==='Pitch' ? Pitch.G : "G";
-      default:
-        return resultType==='Pitch' ? Pitch.G_SHARP : "G_SHARP";
-    }
-  }
-
-  onDateChange() {
-    window.alert(this.eventCreateForm.value.date);
-  }
-
-  sendEvent() {
-    const pitchIndex = (tonality : string) => LATIN_STRING_PITCHES.findIndex(value => {
+  onSubmit(repertoire: { title: string, tonality: string, progression: string[] }[]) {
+    this.loading.set(true);
+    this.setRepertoire(repertoire);
+    const pitchIndex = (tonality: string) => LATIN_STRING_PITCHES.findIndex(value => {
       if (value.includes('/')) {
         const split = value.split('/');
-        return tonality.includes(split.at(0)!) || tonality.includes(split.at(1)!)
+        return tonality.includes(split.at(0)!) || tonality.includes(split.at(1)!);
       }
-      return tonality.includes(value)
+      return tonality.includes(value);
     });
 
-    var repertoire : Omit<Song, 'songId'>[] = [];
+    var newSongs: Omit<Song, 'songId'>[] = [];
     for (let song of this.songsSignal()) {
-      repertoire.push({
-        title: song.title,
-        pitch: this.getPitch(pitchIndex(song.tonality), 'Pitch') as Pitch,
-        tonalitySuffix: LATIN_STRING_PITCHES.find(value => {
-          var result = '';
-          if (value.includes('/')) {
-            const split = value.split('/');
-            song.tonality.includes(split.at(0)!) ? (
-              result = song.tonality.substring((split.at(0)!).length)
-            ) : (
-              result = song.tonality.substring((split.at(1)!).length)
-            );
+      var tonalitySuffix = '';
+      LATIN_STRING_PITCHES.forEach(value => {
+        if (value.includes('/')) {
+          const split = value.split('/');
+          if (song.tonality.startsWith(split.at(0)!) && (song.tonality.includes('b') || song.tonality.includes('#'))) {
+            tonalitySuffix = song.tonality.replace(split.at(0)!, '');
           }
-          return result;
-        }) || '',
-        progression: song.progression.map(value => {
-          return LATIN_STRING_PITCHES.find(value1 => {
-            var result = '';
-            if (value1.includes('/')) {
-              var index! : number;
-              const split = value1.split('/');
-              if (value.includes(split.at(0)!)) {
-                index = LATIN_STRING_PITCHES.indexOf(split.at(0)!);
-                value.replace(split.at(0)!, this.getPitch(index, 'string') as string)
-                result = value;
-              }
-              if (value.includes(split.at(1)!)) {
-                index = LATIN_STRING_PITCHES.indexOf(split.at(1)!);
-                value.replace(split.at(1)!, this.getPitch(index, 'string') as string)
-                result = value;
-              }
-            } else {
-              if (value.includes(value1))
-                result = value;
-            };
+          if (song.tonality.startsWith(split.at(1)!))
+            tonalitySuffix = song.tonality.replace(split.at(1)!, '');
+        }
+        if (song.tonality.startsWith(value)) {
+          if (song.tonality.includes('b'))
+            tonalitySuffix = song.tonality.replace(value + 'b', '');
+          else if (song.tonality.includes('#'))
+            tonalitySuffix = song.tonality.replace(value + '#', '');
+          else
+            tonalitySuffix = song.tonality.replace(value, '');
+        }
+      });
 
-            return result;
-          }) || '';
+      newSongs.push({
+        title: song.title,
+        pitch: this.musicalUtilService.getPitch(pitchIndex(song.tonality), 'Pitch') as Pitch,
+        tonalitySuffix,
+        progression: song.progression.map(value => {
+          var latinStrPitch = LATIN_STRING_PITCHES.find(value1 => {
+            if (value1.includes('/')) {
+              const split = value1.split('/');
+              return (
+                (value.startsWith(split.at(0)!) || value.startsWith(split.at(1)!)) &&
+                (value1.includes('#') || value1.includes('b'))
+              );
+            } else {
+              return value.startsWith(value1) && !value.includes('#') && !value.includes('b')
+            }
+          });
+          const index = LATIN_STRING_PITCHES.indexOf(latinStrPitch!);
+
+          var chordName: string = '';
+          var split: string[] | null = null;
+          if (latinStrPitch?.includes('/')) {
+            split = latinStrPitch.split('/');
+            if (value.startsWith(split.at(0)!))
+              latinStrPitch = split.at(0)!;
+            if (value.startsWith(split.at(1)!))
+              latinStrPitch = split.at(1)!;
+            split = null;
+          }
+          chordName = (this.musicalUtilService.getPitch(
+            index,
+            'string'
+          ) as string).concat(';').concat(value.replace(latinStrPitch!, ''));
+          return chordName;
         })
       })
     }
 
-    for (let cancion of repertoire) {
-      console.log({
-        title: cancion.title,
-        pitch: cancion.pitch,
-        tonalitySuffux: cancion.tonalitySuffix,
-        progression: cancion.progression
-      });
+    var date!: Date;
+    if (typeof this.eventCreateForm.value.date !== 'undefined' && this.eventCreateForm.value.date !== null) {
+      date = this.eventCreateForm.value.date;
     }
-    
-    /**if (this.eventCreateForm.valid) {
-      const eventData : Event = {
-        description: this.eventCreateForm.value.description || '',
-        date: this.eventCreateForm.value.date!,
-        location: this.eventCreateForm.value.location || '',
-        band: this.bandSignal(),
-        repertoire,
-        state: EventState.PLANNED
-      } as Event;
-      this.eventService.addEvent(eventData).subscribe({
-        next: () => {
-          window.alert('Evento creado exitosamente.');
-          this.eventCreateForm.reset();
+    var description!: string;
+    if (typeof this.eventCreateForm.value.description !== 'undefined' && this.eventCreateForm.value.description !== null) {
+      description = this.eventCreateForm.value.description;
+    }
+    var location: string | null = null;
+    if (typeof this.eventCreateForm.value.location !== 'undefined' && this.eventCreateForm.value.location !== null) {
+      location = this.eventCreateForm.value.location;
+    }
+    var loggedInUserRole!: IUserRole;
+    this.authService
+      .getAuthenticatedUserRole()
+      .subscribe({
+        next: (value) => {
+          loggedInUserRole = value;
+          if (loggedInUserRole.nickname === this.bandSignal()?.director) {
+            const eventData: Omit<Event, 'eventId'> = {
+              description,
+              date,
+              location,
+              repertoire: newSongs
+            };
+            this.bandService
+                .patchEventToBand(this.bandSignal()?.bandId!, eventData)
+                .subscribe({
+                  next: () => {
+                    this.eventCreateForm.reset();
+                    this.loading.set(false);
+                    window.alert("Se creó el evento con éxito");
+                    window.location.pathname = '/dashboard/bandas/'+this.bandSignal()?.bandId!;
+                  },
+                  error: (err) => {
+                    if (err.status === 401) {
+                      localStorage.removeItem('accessToken');
+                      this.cookieService.delete('navigation');
+                      AppComponent.userIsAuthenticated.set(false);
+                      window.alert("Sesión expirada, serás redirigido al login");
+                      window.location.pathname = "/login";
+                    } else {
+                      console.error('Error trying to create the event:', err);
+                      window.alert('No se pudo crear el evento. Inténtalo de nuevo más tarde.');
+                    }
+                  }
+                });
+          }
         },
         error: (err) => {
-          console.error('Error al crear el evento:', err);
-          window.alert('No se pudo crear el evento. Inténtalo de nuevo más tarde.');
-          if (err.status===401) {
+          if (err.status === 401) {
             localStorage.removeItem('accessToken');
-            this.cookieService.delete('navigation');
             AppComponent.userIsAuthenticated.set(false);
-            window.location.pathname = "/login";
+            window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
+            window.location.pathname = '/login';
+          } else if (err.status === 500) {
+            window.alert("Error interno del servidor");
+          } else {
+            console.error('Error trying to create the event:', err);
+            window.alert('No se pudo crear el evento. Inténtalo de nuevo más tarde.');
           }
         }
       });
-    } else {
-      window.alert('Por favor, completa todos los campos requeridos correctamente.');
-    }**/
-  }
-
-  alertGroup() {
-    window.alert(this.eventCreateForm.value.description);
-    window.alert(this.eventCreateForm.value.date);
   }
 
   removeReactiveKeyword(keyword: string) {
@@ -271,7 +284,8 @@ export class EventCreateFormComponent {
     });
   }
 
-  setSongCreateForm(ev : FormGroup<{title: FormControl<string | null>, pitch: FormControl<string | null>, tonality: FormControl<string | null>, progression: FormControl<string[] | null>;}>) {
-    this.songCreateForm = ev;
+  private setRepertoire(repertoire: { title: string, tonality: string, progression: string[] }[]) {
+    if (repertoire.length >= 1)
+      this.songsSignal.set(repertoire);
   }
 }

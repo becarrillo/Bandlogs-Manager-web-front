@@ -14,6 +14,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { UserUpdateFormDialogComponent } from '../user-update-form-dialog/user-update-form-dialog.component';
 import { FormSuspenseComponent } from "../form-suspense/form-suspense.component";
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { IUserRole } from '../../interfaces/i-user-role';
+import { AppComponent } from '../../app.component';
 
 
 @Component({
@@ -25,6 +28,7 @@ import { CommonModule } from '@angular/common';
 })
 export class UserProfileComponent {
   userService = inject(UserService);
+  authService = inject(AuthService);
   bandService = inject(BandService);
   readonly dialog = inject(MatDialog);
   route = inject(ActivatedRoute);
@@ -33,10 +37,10 @@ export class UserProfileComponent {
   user : User | null = null;
   bandControl = new FormControl<string>('', [Validators.minLength(3)]);
   bands : Band[] = [];
+  loggedInUserRole! : IUserRole;
   loading = signal(false);
 
   constructor() {
-    this.cookieService.delete('loggedInUsername');
     this.route.paramMap.subscribe(params => {
       const nickname = params.get('nombre-de-usuario');
       if (nickname!==null) {
@@ -49,8 +53,11 @@ export class UserProfileComponent {
               if (err.status===401) {
                 localStorage.removeItem('accessToken');
                 this.cookieService.delete('navigation');
+                AppComponent.userIsAuthenticated.set(false);
                 window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
                 this.router.navigateByUrl('/login');
+              } else {
+                window.alert("Error desconocido encontrado");
               }
             }
           });
@@ -60,9 +67,10 @@ export class UserProfileComponent {
         );
       }
     });
-    if (this.getLoggedInUsername()!==undefined) {
+    this.setLoggedInUserRole();
+    if (this.loggedInUserRole!==undefined) {
       this.bandService
-        .listBandsByDirector(this.getLoggedInUsername())
+        .listBandsByDirector(this.loggedInUserRole.nickname)
         .subscribe(value => {
           this.bands = value.filter(b => b.users?.filter(u => u.userId!==this.user!.userId).length===0);
         });
@@ -73,8 +81,12 @@ export class UserProfileComponent {
     return firstname[0].toUpperCase() + lastname[0].toUpperCase();
   }
 
-  getLoggedInUsername() {
-    return this.cookieService.get('loggedInUsername');
+  private setLoggedInUserRole() {
+    this.authService
+        .getAuthenticatedUserRole()
+        .subscribe(value => {
+          this.loggedInUserRole = value;
+        });
   }
 
   onBandSelectionChange(ev : MatSelectChange) {

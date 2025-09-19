@@ -1,6 +1,6 @@
 #homeMenu {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     margin-bottom: 2em;
     padding-top: 1rem;
 }
@@ -27,7 +27,7 @@
 
 .card-subtitle {
     font-family: Georgia, 'Times New Roman', Times, serif;
-    color: darkcyan;
+    color: rgb(11, 173, 173);
 }
 
 #author {

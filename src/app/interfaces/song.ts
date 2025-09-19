@@ -2,7 +2,7 @@ import { Pitch } from "../enums/pitch";
 
 
 export interface Song {
-    songId : number,
+    songId? : number,
     title: string,
     pitch : Pitch,
     tonalitySuffix : string,

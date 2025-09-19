@@ -6,12 +6,12 @@
   <mat-menu #menu="matMenu">
     @if (getToken().length>0) {
       <button
-        [matTooltip]="'Dashboard de '.concat(getLoggedInUsername())" 
+        [matTooltip]="'Dashboard de '.concat(loggedInUserRole.nickname)" 
         mat-menu-item
       >
         <a routerLink="/dashboard" class="link">
           <mat-icon>person</mat-icon>
-          <span>{{getLoggedInUsername()}}</span>
+          <span>{{loggedInUserRole.nickname}}</span>
         </a>
       </button>
       <button mat-menu-item>
@@ -44,7 +44,6 @@
         </a>
       </button>
     }
-    
   </mat-menu>
   <span>Bandlogs::Home</span>
 </div>
@@ -58,8 +57,13 @@
       (artista/desarrollador software)
     </mat-card-subtitle>
   </mat-card-header>
-  <img mat-card-image width="328" height="320" src="https://storage.cloud.google.com/brando-projects-assets/bandlogs-manager/logo.png"
-    alt="Image of app logo">
+  <img
+    mat-card-image
+    width="328"
+    height="320"
+    src="https://storage.cloud.google.com/brando-projects-assets/bandlogs-manager/logo.png"
+    alt="Image of app logo"
+  />
   <mat-card-content>
     <p>
       <strong>¡Bienvenido a Bandlogs Manager!</strong> La aplicación web diseñada para facilitar la gestión de bandas musicales y sus actividades.

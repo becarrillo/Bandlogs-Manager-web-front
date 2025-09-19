@@ -1,0 +1,9 @@
+#confirm {
+    background-color: red;
+    color: white;
+}
+
+#denied {
+    background-color: white;
+    color: black;
+}

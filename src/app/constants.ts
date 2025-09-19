@@ -38,13 +38,17 @@ export const WHATSAPP_COUNTRY_CODES: (string | null)[] = [
 
 export const MUSICAL_GENRES = [
   "CLASSICAL",
+  "COMERCIAL_BALLAD",
   "COMERCIAL_JAZZ",
-  "COMERCIAL_LATIN",
   "COMERCIAL_ROCK",
   "COMERCIAL_POP",
-  "COMERCIAL_VALLENATO",
+  "COMERCIAL_LATIN",
+  "COMERCIAL_MEX",
+  "COMERCIAL_CUMBIA_VALLENATO",
   "FOLKLORIC",
-  "AFRO_MUSIC"
+  "AFRO_MUSIC",
+  "EXPERIMENTAL",
+  "OTHER"
 ];
 
 export const LATIN_STRING_PITCHES : string[] = [
@@ -62,6 +66,6 @@ export const LATIN_STRING_PITCHES : string[] = [
   'Sol#/Lab'
 ];
 export const SUFFIXES = [
-  '', 'm', '7', 'Maj7', 'dim', 'aug', 'sus2', 'sus4', 'add9', 'm(add11)', '6', '9', '11', '13', 'm7',
+  '', 'm', '7', 'Maj7', 'dim', 'aug', 'sus2', 'sus4', '(add9)', 'mMaj7', 'm(add11)', '6', '9', '6/9', '11', '13', 'm7',
   'mMaj7', '7b5', '7b9'
 ];

@@ -1,0 +1,28 @@
+mat-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.action-btns {
+    display: flex;
+    justify-content: space-between;
+    margin-left: auto;
+}
+
+.add-chord-btn {
+    margin-left: auto;
+}
+
+.item {
+    display: flex;
+    justify-content: center;
+}
+
+#containerContent {
+    display: flex;
+    flex-direction: column;
+}
+
+#suspense {
+    backdrop-filter: blur(2px);
+}

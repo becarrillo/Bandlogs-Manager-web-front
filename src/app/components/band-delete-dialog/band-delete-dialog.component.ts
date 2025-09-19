@@ -5,11 +5,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { Band } from '../../interfaces/band';
 import { AppComponent } from '../../app.component';
 import { Router } from '@angular/router';
+import { FormSuspenseComponent } from '../form-suspense/form-suspense.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-band-delete-dialog',
   standalone: true,
   imports: [
+    CommonModule,
+    FormSuspenseComponent,
     MatButtonModule,
     MatDialogModule
   ],
@@ -24,14 +28,14 @@ export class BandDeleteDialogComponent {
 
   deletionInProgress = signal(false);
 
-  onDeleteConfirm() {
+  onDeleteConfirm(band : Band) {
     this.deletionInProgress.set(true);
-    this.bandService.deleteBand(this.data.band).subscribe({
+    this.bandService.deleteBand(band).subscribe({
       next: () => {
         this.deletionInProgress.set(false);
-        this.dialogRef.close(true);
-        window.alert(`La banda ${this.data.band.name} ha sido eliminada correctamente.`);
-        this.router.navigateByUrl('/dashboard/bandas');
+        window.alert(`La banda ${band.name} ha sido eliminada correctamente.`);
+        this.dialogRef.close();
+        window.location.reload();
       },
       error: (err) => {
         console.error('Error al eliminar la banda:', err);
@@ -39,10 +43,12 @@ export class BandDeleteDialogComponent {
         if (err.status===401) {
           localStorage.removeItem('accessToken');
           AppComponent.userIsAuthenticated.set(false);
+          this.dialogRef.close();
           window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a '/login'");
           this.router.navigateByUrl('/login');
         } else {
-          window.alert(`No se pudo eliminar la banda ${this.data.band.name}.`);
+          window.alert(`No se pudo eliminar la banda ${band.name}.`);
+          this.dialogRef.close();
         }
       }
     });

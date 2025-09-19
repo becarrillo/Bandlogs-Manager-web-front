@@ -35,7 +35,6 @@ export class AppComponent {
       localStorage.setItem('theme','light');
   }
 
-
   getPath() {
     return this.router.url;
   }
