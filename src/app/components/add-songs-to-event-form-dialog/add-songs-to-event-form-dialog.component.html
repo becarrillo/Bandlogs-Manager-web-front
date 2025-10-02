@@ -1,0 +1,9 @@
+<mat-dialog-content>
+    <ng-container *ngIf="!loading(); else suspenseTemplate">
+        <app-song-create-form (repertoire)="onSubmit($event)"></app-song-create-form>
+    </ng-container>
+    <!-- Loading bands state template when loading signal value changes  -->
+    <ng-template #suspenseTemplate>
+        <app-form-suspense text="Guardando, espera..." id="suspense"></app-form-suspense>
+    </ng-template>
+</mat-dialog-content>

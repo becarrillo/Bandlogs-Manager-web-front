@@ -1,3 +1,10 @@
+.container-content {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+    height: fit-content;
+}
+
 mat-dialog-content {
     display: flex;
     flex-direction: column;
@@ -24,17 +31,16 @@ fieldset {
 
 #repertoire {
     overflow-y: auto;
-    margin-bottom: 1rem;
+    margin-bottom: .5rem;
 }
 
 #repertoireTitleContainer {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1em;
 }
 
 #songEditForm {
-    height: 20em;
+    height: 25em;
     overflow-y: auto;
 }
 
@@ -46,6 +52,10 @@ fieldset {
     padding: .5rem;
     width: 5rem;
     height: 3rem;
-    background-color: rgb(109, 228, 192);
-    color: rgb(37, 24, 19);
+    background-color: #367cc7;
+    color: white;
+}
+
+#updateButton {
+    margin-left: auto;
 }

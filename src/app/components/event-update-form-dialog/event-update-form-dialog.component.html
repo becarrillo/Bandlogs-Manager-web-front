@@ -1,144 +1,211 @@
 <mat-dialog-content>
     <ng-container *ngIf="!loading(); else formSuspenseTemplate;">
-        <h5><strong>Modificar evento</strong></h5>
-        <mat-divider id="firstDivider"></mat-divider>
-        @if (!songEditFormIsShown) {
-        <form [formGroup]="eventUpdateBasicForm" (submit)="onEventUpdateBasicFormSubmit()">
-            <fieldset>
-                <legend>Datos básicos</legend>
-                <mat-form-field appearance="outline">
-                    <mat-label>Descripción</mat-label>
-                    <input matInput placeholder="Descripción" formControlName="description" required>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                    <mat-label>Fecha</mat-label>
-                    <input matInput [matDatepicker]="picker" formControlName="date" placeholder="Fecha del evento"
-                        required />
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker></mat-datepicker>
-                    <mat-hint>Seleccione la fecha del evento</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                    <mat-label>Lugar</mat-label>
-                    <input matInput formControlName="location">
-                </mat-form-field>
-            </fieldset>
-            <button type="submit" mat-flat-button>Siguiente</button>
-        </form>
-        }
-        @else {
-        <div id="repertoireTitleContainer">
-            <h6>Repertorio</h6>
-            <button mat-mini-fab (click)="songEditFormIsShown = false;"
-                class="to-back-btn"><mat-icon>arrow_back</mat-icon>Volver</button>
-        </div>
-        <form [formGroup]="songEditForm"
-            *ngIf="
-                songEditFormIsShown &&
-                songEditForm.value.title!==null &&
-                songEditForm.value.tonality!==null &&
-                songEditForm.value.progression!==null
-            "
-            id="songEditForm" (submit)="songEditForm.controls.tonality.enable(); onSongUpdate();"
-        >
-            <fieldset>
-                <legend>Modificar canción</legend>
-                <mat-form-field appearance="outline">
-                    <mat-label>Título</mat-label>
-                    <input matInput placeholder="Título" formControlName="title" required>
-                    <mat-hint *ngIf="songEditForm.controls.title.invalid">El título es obligatorio, de mínimo dos
-                        caracteres</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline" disabled>
-                    <mat-label>Tonalidad</mat-label>
-                    <input matInput [matAutocomplete]="auto" placeholder="Tonalidad" formControlName="tonality"
-                        required>
-                    <mat-autocomplete #auto="matAutocomplete">
-                        @for (option of filteredTonalityOptions(); track $index) {
-                        <mat-option
-                            [value]="option.pitch.concat(option.suffix)">{{option.pitch}}{{option.suffix}}</mat-option>
-                        }
-                    </mat-autocomplete>
-                </mat-form-field>
-                <mat-form-field appearance="outline">
-                    <mat-label>Progresión de acordes</mat-label>
-                    <mat-chip-grid #reactiveChipGrid aria-label="Enter reactive form keywords"
-                        formControlName="progression">
-                        @for (keyword of reactiveKeywords(); track $index) {
-                        <mat-chip-row (removed)="removeReactiveChordKeyword($index);">
-                            {{keyword}}
-                            <button matChipRemove [attr.aria-label]="'remove reactive chord: '.concat(keyword)">
-                                <mat-icon>cancel</mat-icon>
-                            </button>
-                        </mat-chip-row>
-                        }
-                    </mat-chip-grid>
-                    <input matInput [matChipInputFor]="reactiveChipGrid" [matAutocomplete]="auto1"
-                        [matChipInputSeparatorKeyCodes]="separatorKeysCodes" #chordEntry
-                        formControlName="progressionChordOption"
-                        (matChipInputTokenEnd)="addReactiveChordKeyword($event);" />
-                    <mat-autocomplete #auto1="matAutocomplete"
-                        (optionSelected)="onProgressionChordKeywordSelected($event)">
-                        @for (chord of filteredProgressionOptions | async; track $index) {
-                        <mat-option [value]="
+        <div class="container-content">
+            <h5><strong>Modificar evento</strong></h5>
+            <mat-divider id="firstDivider"></mat-divider>
+            @if (!eventRepertoireIsShown) {
+            <form [formGroup]="eventUpdateBasicForm" (submit)="onEventUpdateBasicFormSubmit()">
+                <fieldset>
+                    <legend>Datos básicos</legend>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Descripción</mat-label>
+                        <input matInput placeholder="Descripción" formControlName="description" required>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Fecha</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="date" placeholder="Fecha del evento"
+                            required />
+                        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        <mat-hint>Seleccione la fecha del evento</mat-hint>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Lugar</mat-label>
+                        <input matInput formControlName="location">
+                    </mat-form-field>
+                </fieldset>
+                <button type="submit" mat-flat-button>Siguiente</button>
+            </form>
+            }
+            @else {
+            <div id="repertoireTitleContainer">
+                <h6>Repertorio</h6>
+                <button
+                    mat-mini-fab
+                    (click)="navigationComeBack()"
+                    class="to-back-btn">
+                    <mat-icon>arrow_back</mat-icon>
+                    Volver
+                </button>
+            </div>
+
+            <mat-list id="repertoire" *ngIf="eventRepertoireIsShown && data.event.repertoire!==undefined && data.event.repertoire.length>0">
+                @for (song of repertoireSignal(); track song.songId) {
+                <mat-list-item>
+                    {{song.title}}
+                    (
+                    <span class="song-pitch">
+                        {{latinStrChordPitch(pitchIndex(song.pitch),songEditForm.value.tonality!)}}{{song.tonalitySuffix}}
+                    </span>
+                    )
+                    <button
+                        type="button"
+                        mat-icon-button
+                        matTooltip="Editar canción"
+                        (click)="
+                            songEditForm.setValue({
+                                songId: song.songId!,
+                                title: song.title,
+                                tonality: getTonalityFromSibling($event)!.trim(),
+                                progressionChordOption: '',
+                                progression: song.progression
+                            });
+                            songEditFormEnabledControlValuesCopy = {
+                                songId: songEditForm.value.songId!,
+                                title: songEditForm.value.title!,
+                                tonality: songEditForm.value.tonality!,
+                                progression: songEditForm.value.progression!
+                            };
+                            songKeyTranspositionIsOpened = false;
+                            setReactiveKeywords(songEditForm.value.progression!);
+                            submitEventBtnIsDisabled = true;
+                            hideTemporalSongRowInEdition(song);
+                        "
+                    >
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        matTooltip="Transportar"
+                        (click)="
+                            songEditFormEnabledControlValuesCopy = {
+                                songId: song.songId!,
+                                title: song.title,
+                                tonality: latinStrChordPitch(pitchIndex(song.pitch)).concat(song.tonalitySuffix || ''),
+                                progression: song.progression
+                            };
+                            songEditForm.setValue({
+                                songId: null,
+                                title: null,
+                                tonality: null,
+                                progressionChordOption: null,
+                                progression: null
+                            });
+                            songKeyTranspositionIsOpened = true;
+                            submitEventBtnIsDisabled = true;
+                            hideTemporalSongRowInEdition(song);
+                        "
+                    >
+                        <mat-icon>swap_vert</mat-icon>
+                    </button>
+                    <button type="button" mat-icon-button matTooltip="Cancelar canción" (click)="cancelSong(song)">
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-list-item>
+                <mat-divider *ngIf="!$last"></mat-divider>
+                }
+            </mat-list>
+            <form
+                [formGroup]="songEditForm"
+                *ngIf="
+                    eventRepertoireIsShown &&
+                    songEditForm.value.title!==null &&
+                    songEditForm.value.tonality!==null &&
+                    songEditForm.value.progression!==null
+                "
+                id="songEditForm"
+                (submit)="songEditForm.controls.tonality.enable(); handleSongUpdate();"
+            >
+                <fieldset>
+                    <legend>Modificar canción</legend>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Título</mat-label>
+                        <input matInput placeholder="Título" formControlName="title" required>
+                        <mat-hint *ngIf="songEditForm.controls.title.invalid">El título es obligatorio, de mínimo dos
+                            caracteres</mat-hint>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" disabled>
+                        <mat-label>Tonalidad</mat-label>
+                        <input matInput [matAutocomplete]="auto" placeholder="Tonalidad" formControlName="tonality"
+                            required>
+                        <mat-autocomplete #auto="matAutocomplete">
+                            @for (option of filteredTonalityOptions(); track $index) {
+                            <mat-option
+                                [value]="option.pitch.concat(option.suffix)">{{option.pitch}}{{option.suffix}}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Progresión de acordes</mat-label>
+                        <mat-chip-grid
+                            #reactiveChipGrid
+                            aria-label="Enter reactive form keywords"
+                            formControlName="progression"
+                        >
+                            @for (keyword of reactiveKeywords(); track $index) {
+                            <mat-chip-row
+                                (removed)="
+                                    removeReactiveChordKeyword($index);
+                                    songEditForm.controls.progression.setValue(this.reactiveKeywords());
+                                "
+                            >
+                                {{keyword}}
+                                <button matChipRemove [attr.aria-label]="'remove reactive chord: '.concat(keyword)">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </mat-chip-row>
+                            }
+                        </mat-chip-grid>
+                        <input matInput [matChipInputFor]="reactiveChipGrid" [matAutocomplete]="auto1"
+                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes" #chordEntry
+                            formControlName="progressionChordOption"
+                            (matChipInputTokenEnd)="addReactiveChordKeyword($event);" />
+                        <mat-autocomplete #auto1="matAutocomplete"
+                            (optionSelected)="onProgressionChordKeywordSelected($event)">
+                            @for (chord of filteredProgressionOptions | async; track $index) {
+                            <mat-option [value]="
                             latinStrChordPitch(
                                 getLatinStrPitches().indexOf(chord.pitch),
                                 songEditForm.value.tonality!
                             )
                                 .concat(chord.suffix)
                         ">
-                            {{
-                            latinStrChordPitch(
-                            getLatinStrPitches().indexOf(chord.pitch),
-                            songEditForm.value.tonality!
-                            )
-                            .concat(chord.suffix)
-                            }}
-                        </mat-option>
-                        }
-                    </mat-autocomplete>
-                </mat-form-field>
-                <button class="song-changes-btn" mat-raised-button type="submit"
-                    matTooltip="Confirmar cambios en la canción">
-                    Agregar cambios
-                </button>
-            </fieldset>
-        </form>
-
-        <mat-list id="repertoire" *ngIf="data.event.repertoire!==undefined && data.event.repertoire.length>0">
-            @for (song of repertoireSignal(); track song.songId) {
-            <mat-list-item>
-                {{song.title}}
-                (
-                <span class="song-pitch">
-                    {{latinStrChordPitch(pitchIndex(song.pitch),songEditForm.value.tonality!)}}{{song.tonalitySuffix}}
-                </span>
-                )
-                <button type="button" mat-icon-button matTooltip="Editar canción" (click)="
-                    getTonalityFromSibling($event);
-                    songEditForm.setValue({
-                        songId: song.songId!,
-                        title: song.title,
-                        tonality: getTonalityFromSibling($event)!.trim(),
-                        progressionChordOption: '',
-                        progression: song.progression
-                    });
-                    setReactiveKeywords(songEditForm.value.progression!);
-                    submitEventBtnIsDisabled = true;
-                    hideTemporalSongRowInEdition(song);
-                ">
-                    <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button matTooltip="Transportar"><mat-icon>swap_vert</mat-icon></button>
-                <button type="button" mat-icon-button matTooltip="Cancelar canción" (click)="cancelSong(song)">
-                    <mat-icon>cancel</mat-icon>
-                </button>
-            </mat-list-item>
-            <mat-divider *ngIf="!$last"></mat-divider>
+                                {{
+                                latinStrChordPitch(
+                                getLatinStrPitches().indexOf(chord.pitch),
+                                songEditForm.value.tonality!
+                                )
+                                .concat(chord.suffix)
+                                }}
+                            </mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
+                    <button
+                        class="song-changes-btn"
+                        mat-raised-button
+                        type="submit"
+                        matTooltip="Confirmar cambios en la progresión de acordes"
+                        [disabled]="
+                            songEditForm.value.songId===songEditFormEnabledControlValuesCopy.songId &&
+                            songEditForm.value.title===songEditFormEnabledControlValuesCopy.title &&
+                            songEditForm.value.progression===songEditFormEnabledControlValuesCopy.progression
+                        "
+                    >
+                        Agregar cambios
+                    </button>
+                </fieldset>
+            </form>
+            <app-song-key-transposition
+                [songInfo]="songEditFormEnabledControlValuesCopy"
+                (selectedKey)="handleKeySelection($event)"
+                *ngIf="songKeyTranspositionIsOpened"
+            >
+            </app-song-key-transposition>
+            <button type="button" mat-flat-button (click)="sendUpdate()" id="updateButton"
+                [disabled]="submitEventBtnIsDisabled">ACTUALIZAR</button>
             }
-        </mat-list>
-        <button type="button" mat-flat-button (click)="sendUpdate()" [disabled]="submitEventBtnIsDisabled">Actualizar</button>
-        }
+        </div>
     </ng-container>
     <ng-template #formSuspenseTemplate>
         <app-form-suspense text="Espera..."></app-form-suspense>

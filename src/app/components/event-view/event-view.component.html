@@ -1,6 +1,6 @@
-<div>
+<div class="content">
     <div id="titleContainer">
-        <h5>Evento: <strong>{{_event.description}}</strong></h5>
+        <h5>Evento: <strong id="description">{{_event.description}}</strong></h5>
         <button (click)="openDialog(getManagingEventActionEnumType().TO_EDIT)" mat-icon-button><mat-icon>edit</mat-icon></button>
     </div>
 
@@ -28,8 +28,6 @@
             }
         </p>
     </div>
-
-    <!--<full-calendar [options]="calendarOptions"></full-calendar>-->
 
     @if (_event.repertoire!==undefined && _event.repertoire.length>=1) {
     <p><mat-icon>library_music</mat-icon> Repertorio del evento:</p>    
@@ -62,7 +60,8 @@
                     <button
                         mat-stroked-button
                         matTooltip="Ver progresión de acordes"
-                        (click)="openDialog(getManagingEventActionEnumType().TO_VIEW_PROGRESSION_OF_SONG, {
+                        (click)="
+                            openDialog(getManagingEventActionEnumType().TO_VIEW_PROGRESSION_OF_SONG, {
                                 loggedInUserRole,
                                 bandId,
                                 event: _event,
@@ -89,4 +88,5 @@
         </table>
     </div>
     }
+    <button mat-icon-button (click)="openDialog(getManagingEventActionEnumType().TO_ADD_SONGS)" class="add-song-btn" matTooltip="Agrega canciones"><mat-icon>add</mat-icon></button>
 </div>

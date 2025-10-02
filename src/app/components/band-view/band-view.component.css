@@ -1,5 +1,5 @@
 .actions {
-    display: flex;
+    display: inline-block;
     padding-top: 4px;
     padding-bottom: 4px;
 }
@@ -97,6 +97,11 @@ button:hover {
 
 .text.light {
     color: white;
+}
+
+td, th {
+    text-align: center;
+    padding: 2em;
 }
 
 .user-link {

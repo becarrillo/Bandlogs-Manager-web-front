@@ -1,13 +1,31 @@
 #homeMenu {
     display: flex;
+    justify-self: center;
     justify-content: space-between;
     margin-bottom: 2em;
     padding-top: 1rem;
 }
 
+@media screen and (max-width: 767px) {
+    #homeMenu {
+        width: 75vw;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #homeMenu {
+        width: 50vw;
+    }
+}
+
 .link {
     text-decoration: none;
     color: white;
+}
+
+#menuContainer {
+    display: flex;
+    flex-direction: column;
 }
 
 .white-brand-text {

@@ -1,0 +1,34 @@
+<div id="userFormFieldContainer">
+    <mat-form-field class="user-form-field">
+        <mat-label>nombre de usuario</mat-label>
+        <input #filterUserInput type="text" [matAutocomplete]="auto1" (focus)="onFilterUsersInputFocus()"
+            (input)="filterUsers()" [formControl]="userNicknameControl" matInput />
+        <mat-autocomplete requireSelection #auto1="matAutocomplete" id="userAutocomplete">
+            @for (user of filteredUsers(); track user.userId) {
+            <mat-option [value]="user.nickname" class="user-option" [matTooltip]="user.nickname">
+                {{user.nickname}}
+                <span class="user-fullname">{{user.firstname}} {{user.lastname}}</span>
+            </mat-option>
+            }
+        </mat-autocomplete>
+        <mat-error
+            *ngIf="
+                userNicknameControl.invalid 
+                && userNicknameControl.hasError('required') 
+                && userNicknameControl.touched
+            "
+        >
+            El campo es obligatorio
+        </mat-error>
+    </mat-form-field>
+    <button
+        type="button"
+        class="search"
+        [disabled]="userNicknameControl.invalid"
+        (click)="sendUserNicknameToParent()"
+        mat-mini-fab
+    >
+        <mat-icon>add</mat-icon>
+    </button>
+
+</div>

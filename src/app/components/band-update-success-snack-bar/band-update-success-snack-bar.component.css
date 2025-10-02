@@ -1,0 +1,35 @@
+.band-update-success-action {
+    display: flex;
+    color: black;
+}
+
+.band-update-success-action > button {
+    background-color: white;
+    color: rgb(51, 49, 49);
+    padding-bottom: 6px;
+    border-width: 1px;
+    font-weight: 700;
+}
+
+.band-update-success-action > button:hover {
+    scale: 110%;
+    background-color: rgb(127, 209, 247);
+    color: rgb(0, 0, 0);
+}
+
+.band-update-success-msg {
+    padding-top: 10pt;
+    padding-bottom: 10pt;
+    padding-left: 2em;
+    padding-right: 2em;
+    background-color: rgb(92, 194, 241);
+    color: rgb(0, 0, 0);
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+}
+
+#snackContainer {
+    display: flex;
+    justify-content: center;
+    background-color: white;
+    border-radius: 3%;
+}

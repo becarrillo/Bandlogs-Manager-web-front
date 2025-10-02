@@ -1,6 +1,3 @@
-import { MusicalGenre } from "./enums/musical-genre";
-import { Pitch } from "./enums/pitch";
-
 export const WHATSAPP_COUNTRY_CODES: (string | null)[] = [
   null,
   '+1',   // USA/Canada

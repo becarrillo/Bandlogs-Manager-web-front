@@ -24,6 +24,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { FormSuspenseComponent } from '../form-suspense/form-suspense.component';
 import { IUserRole } from '../../interfaces/i-user-role';
 import { BandService } from '../../services/band.service';
+import { SongKeyTranspositionComponent } from '../song-key-transposition/song-key-transposition.component';
+import { SongService } from '../../services/song.service';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -42,18 +45,21 @@ import { BandService } from '../../services/band.service';
     MatIconModule,
     MatInputModule,
     MatListModule,
+    MatTooltipModule,
     ReactiveFormsModule,
-    MatTooltipModule
+    SongKeyTranspositionComponent
   ],
   templateUrl: './event-update-form-dialog.component.html',
   styleUrl: './event-update-form-dialog.component.css'
 })
 export class EventUpdateFormDialogComponent implements OnInit {
-  readonly data = inject<{ loggedInUserRole: IUserRole, event: Event }>(MAT_DIALOG_DATA);
+  readonly data = inject<{ bandId: number; loggedInUserRole: IUserRole; event: Event; }>(MAT_DIALOG_DATA);
   private readonly bandService = inject(BandService);
   private readonly eventService = inject(EventService);
+  private readonly songService = inject(SongService);
   private readonly musicalUtilService = inject(MusicalUtilService);
   protected readonly dialogRef = inject(MatDialogRef<EventUpdateFormDialogComponent>);
+  readonly router = inject(Router);
   protected eventUpdateBasicForm = new FormBuilder().group({
     date: new FormControl<Date | null>(this.data.event.date, Validators.required),
     description: new FormControl<string>(this.data.event.description, [Validators.required, Validators.minLength(6)]),
@@ -82,12 +88,22 @@ export class EventUpdateFormDialogComponent implements OnInit {
 
   filteredProgressionOptions!: Observable<{ pitch: string; suffix: string; }[]>;
   repertoireSignal = signal<Song[]>([]);
-  songEditFormIsShown = false;
+  eventRepertoireIsShown = false;
+  protected songEditFormEnabledControlValuesCopy!: {
+    songId: number | null,
+    title: string | null,
+    tonality: string | null,
+    progression: string[] | null
+  }
   protected submitEventBtnIsDisabled = true;
+  protected songKeyTranspositionIsOpened = false;
   readonly loading = signal(false);
 
   ngOnInit(): void {
     this.repertoireSignal.set(this.data.event.repertoire as Song[]);
+    this.eventUpdateBasicForm.valueChanges.subscribe(() => {
+      this.submitEventBtnIsDisabled = false;
+    });
     this.songEditForm.controls.tonality.valueChanges.subscribe(value => {
       if (value !== null && value.length >= 1) {
         this.filteredTonalityOptions.set(
@@ -147,7 +163,7 @@ export class EventUpdateFormDialogComponent implements OnInit {
             localStorage.removeItem('accessToken');
             AppComponent.userIsAuthenticated.set(false);
             window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
-            window.location.pathname = '/login';
+            this.router.navigateByUrl('/login');
           } else if (err.status === 500) {
             window.alert("Error interno del servidor");
           } else {
@@ -155,6 +171,23 @@ export class EventUpdateFormDialogComponent implements OnInit {
           }
         }
       });
+  }
+
+  navigationComeBack() {
+    if (this.songEditFormHasValues()) {
+      this.songEditForm.controls.title.setValue(null),
+        this.songEditForm.controls.tonality.setValue(null),
+        this.songEditForm.controls.progression.setValue(null),
+        this.songEditForm.controls.progressionChordOption.setValue(''),
+        this.repertoireSignal.set(this.data.event.repertoire)
+    } else {
+      if (this.songKeyTranspositionIsOpened) {
+        this.repertoireSignal.set(this.data.event.repertoire as Song[]);
+        this.songKeyTranspositionIsOpened = false;
+      }
+      else
+        this.eventRepertoireIsShown = false;
+    }
   }
 
   protected findLatinTonalityStrPitch(pitch: Pitch) {
@@ -191,6 +224,10 @@ export class EventUpdateFormDialogComponent implements OnInit {
     return LATIN_STRING_PITCHES;
   }
 
+  getOrdinal(pitch: Pitch) {
+    return parseInt(pitch.valueOf().toString());
+  }
+
   getPitch(ordinal: number) {
     return (this.pitch(ordinal, 'Pitch') as Pitch);
   }
@@ -219,27 +256,98 @@ export class EventUpdateFormDialogComponent implements OnInit {
     return parent.parentElement?.querySelector('.song-pitch')?.textContent;
   }
 
-  hideTemporalSongRowInEdition(song: Song) {
-    this.repertoireSignal.set((this.data.event.repertoire as Song[]).filter(s => s !== song));
+  handleKeySelection(key: string) {
+    this.loading.set(true);
+    var keyIndex!: number;
+    var tonalitySuffix = '';
+    LATIN_STRING_PITCHES.forEach(value => {
+      if (value.includes('/')) {
+        const split = value.split('/');
+        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(split.at(0)!))
+          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(split.at(0)!, '');
+        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(split.at(1)!))
+          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(split.at(1)!, '');
+      } else {
+        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(value))
+          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(value, '');
+      }
+    });
+    LATIN_STRING_PITCHES.forEach((value, index) => {
+      if (value.includes('/')) {
+        const split = value.split('/');
+        if (key.startsWith(split.at(0)!) || key.startsWith(split.at(1)!))
+          keyIndex = index;
+      } else {
+        if (key.startsWith(value))
+          keyIndex = index;
+      }
+    });
+    const newTonality = key.concat(tonalitySuffix);
+    const pitch = this.musicalUtilService.getPitch(keyIndex!, 'Pitch') as Pitch;
+    console.log(JSON.stringify(pitch));
+
+    console.log(newTonality);
+    const event = this.data.event;
+    const song = (event.repertoire as Song[])
+      .find(s => s.songId === this.songEditFormEnabledControlValuesCopy.songId!)!;
+    this.songService
+      .transportSong(song.songId!, { pitch, suffix: tonalitySuffix })
+      .subscribe({
+        next: (value) => {
+          console.log(JSON.stringify(value));
+          const event = this.data.event;
+          // Update the song in the repertoire with the returned value
+          event['repertoire'] = (event.repertoire as Song[]).map(s => {
+            if (s.songId === value.songId)
+              return value;
+            return s;
+          });
+          // Now update the event with the modified repertoire
+          this.eventService
+            .updateEvent(event.eventId!, event)
+            .subscribe({
+              next: (value) => {
+                this.bandService
+                  .patchEventToBand(this.data.bandId, value)
+                  .subscribe({
+                    next: () => {
+                      this.data.event = value;
+                      this.repertoireSignal.set(value.repertoire as Song[]);
+                      this.songKeyTranspositionIsOpened = false;
+                      this.loading.set(false);
+                      window.location.reload();
+                      this.dialogRef.close();
+                    },
+                    error: (err) => {
+                      onError(err);
+                    }
+                  });
+              },
+              error: (err) => {
+                onError(err)
+              }
+            });
+        },
+        error: (err) => {
+          onError(err);
+        }
+      });
+    const onError = (err: any) => {
+      if (err.status === 500) {
+        window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
+      } else if (err.status === 401) {
+        window.alert('Sesión expirada. Serás redirigido al login.');
+        localStorage.removeItem('accessToken');
+        AppComponent.userIsAuthenticated.set(false);
+        this.router.navigateByUrl('/login');;
+      } else {
+        window.alert('Error desconocido, no se pudo realizar una actualización de la tonalidad.');
+      }
+    }
+    //const repertoire: Song[]
   }
 
-  onProgressionChordKeywordSelected(ev: MatAutocompleteSelectedEvent): void {
-    this.reactiveKeywords.update(keywords => [...keywords, ev.option.viewValue]);
-    this.songEditForm.controls.progression.setValue([]);
-    ev.option.deselect();
-    this.filteredProgressionOptions = this.songEditForm.controls.progressionChordOption.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filter(this.getChords(), value || ''))
-    );
-    this.progressionChordInput.nativeElement.setAttribute('value', '');
-  }
-
-  onEventUpdateBasicFormSubmit() {
-    console.log("Evento: ", JSON.stringify(this.eventUpdateBasicForm.value))
-    this.songEditFormIsShown = true;
-  }
-
-  onSongUpdate() {
+  protected handleSongUpdate() {
     this.loading.set(true);
     const pitch = (tonality: string) => {
       return this.musicalUtilService
@@ -274,6 +382,8 @@ export class EventUpdateFormDialogComponent implements OnInit {
           tonalitySuffix = this.songEditForm.value.tonality!.replace(value, '');
       }
     });
+    if (tonalitySuffix === null)
+      tonalitySuffix = ' ';
     const song: Song = {
       songId: this.songEditForm.value.songId!,
       title: this.songEditForm.value.title!,
@@ -310,7 +420,6 @@ export class EventUpdateFormDialogComponent implements OnInit {
         return chordName;
       })
     }
-    console.log(JSON.stringify(song));
     this.songEditForm.setValue({
       songId: null,
       title: null,
@@ -319,8 +428,10 @@ export class EventUpdateFormDialogComponent implements OnInit {
       progressionChordOption: null
     });
 
-    var repertoire: Song[] = this.eventUpdateBasicForm.value.repertoire!;
+    const repertoire: Song[] = this.eventUpdateBasicForm.value.repertoire!;
     for (let i = 0; i < this.eventUpdateBasicForm.value.repertoire!.length; i++) {
+      if (repertoire.at(i)?.tonalitySuffix === null)
+        repertoire[i]['tonalitySuffix'] = ' ';
       if (this.eventUpdateBasicForm.value.repertoire?.at(i)!.songId === song.songId) {
         repertoire![i] = song;
         var event: Event = {
@@ -331,26 +442,40 @@ export class EventUpdateFormDialogComponent implements OnInit {
           repertoire
         }
         this.eventService
-            .updateEvent(this.data.event.eventId!, event)
-            .subscribe({
-              next: (value) => {
-                console.log((JSON.stringify(value)));
-                this.repertoireSignal.set(repertoire);
-              },
-              error: (err) => {
-                if (err.status === 500) {
-                  window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
-                } else if (err.status === 401) {
-                  window.alert('Sesión expirada. Serás redirigido al login.');
-                  localStorage.removeItem('accessToken');
-                  AppComponent.userIsAuthenticated.set(false);
-                  window.location.pathname = "/login";
-                } else {
-                  window.alert('Error desconocido, no se pudo realizar una actualización.');
-                }
-                this.loading.set(false);
-              }
-            });
+          .updateEvent(this.data.event.eventId!, event)
+          .subscribe({
+            next: (value) => {
+              this.bandService
+                .patchEventToBand(this.data.bandId, value)
+                .subscribe({
+                  next: () => {
+                    this.data.event = value;
+                    this.repertoireSignal.set(value.repertoire);
+                    this.submitEventBtnIsDisabled = false;
+                    this.loading.set(false);
+                  },
+                  error: (err) => {
+                    onError(err);
+                  }
+                });
+            },
+            error: (err) => {
+              onError(err)
+            }
+          });
+        const onError = (err: any) => {
+          if (err.status === 500) {
+            window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
+          } else if (err.status === 401) {
+            window.alert('Sesión expirada. Serás redirigido al login.');
+            localStorage.removeItem('accessToken');
+            AppComponent.userIsAuthenticated.set(false);
+            this.router.navigateByUrl('/login');;
+          } else {
+            window.alert('Error desconocido, no se pudo realizar una actualización.');
+          }
+          this.loading.set(false);
+        }
       } else {
         repertoire[i]['pitch'] = this.musicalUtilService
           .stringToPitch(
@@ -361,11 +486,36 @@ export class EventUpdateFormDialogComponent implements OnInit {
     this.submitEventBtnIsDisabled = false;
   }
 
+  hideTemporalSongRowInEdition(song: Song) {
+    this.repertoireSignal.set((this.data.event.repertoire as Song[]).filter(s => s !== song));
+  }
+
+  onProgressionChordKeywordSelected(ev: MatAutocompleteSelectedEvent): void {
+    this.reactiveKeywords.update(keywords => [...keywords, ev.option.viewValue]);
+    this.songEditForm.controls.progression.setValue([]);
+    ev.option.deselect();
+    this.filteredProgressionOptions = this.songEditForm.controls.progressionChordOption.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.getChords(), value || ''))
+    );
+    this.progressionChordInput.nativeElement.setAttribute('value', '');
+  }
+
+  onEventUpdateBasicFormSubmit() {
+    console.log("Evento: ", JSON.stringify(this.eventUpdateBasicForm.value))
+    this.eventRepertoireIsShown = true;
+  }
+
+  removeReactiveChordKeyword(index: number) {
+    this.reactiveKeywords.update(keywords => {
+      keywords.splice(index, 1);
+      return [...keywords];
+    });
+  }
+
   sendUpdate() {
     if (this.eventUpdateBasicForm.valid) {
       this.loading.set(true);
-      console.log(this.data.event.eventId!);
-
       const event = {
         eventId: this.data.event.eventId!,
         date: this.eventUpdateBasicForm.value.date!,
@@ -381,32 +531,40 @@ export class EventUpdateFormDialogComponent implements OnInit {
         )
         .subscribe({
           next: (value) => {
+            this.bandService
+              .patchEventToBand(this.data.bandId, value)
+              .subscribe({
+                next: () => {
+                  this.submitEventBtnIsDisabled = false;
+                  window.location.reload();
+                  this.loading.set(false);
+                },
+                error: (err) => {
+                  onError(err);
+                }
+              });
             window.alert(`Evento con id ${value.eventId}: ${value.description} actualizado`);
             this.loading.set(false);
             this.dialogRef.close();
           },
           error: (err) => {
-            if (err.status === 500) {
-              window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
-            } else if (err.status === 401) {
-              window.alert('Sesión expirada. Serás redirigido al login.');
-              localStorage.removeItem('accessToken');
-              AppComponent.userIsAuthenticated.set(false);
-              window.location.pathname = "/login";
-            } else {
-              window.alert('Error desconocido, no se pudo realizar la acción de guardar el evento.');
-            }
-            this.loading.set(false);
+            onError(err)
           }
         });
     }
-  }
-
-  removeReactiveChordKeyword(index: number) {
-    this.reactiveKeywords.update(keywords => {
-      keywords.splice(index, 1);
-      return [...keywords];
-    });
+    const onError = (err: any) => {
+      if (err.status === 500) {
+        window.alert('Error interno del servidor. Inténtalo de nuevo más tarde.');
+      } else if (err.status === 401) {
+        window.alert('Sesión expirada. Serás redirigido al login.');
+        localStorage.removeItem('accessToken');
+        AppComponent.userIsAuthenticated.set(false);
+        this.router.navigateByUrl('/login');;
+      } else {
+        window.alert('Error desconocido, no se pudo realizar una actualización.');
+      }
+      this.loading.set(false);
+    }
   }
 
   protected setReactiveKeywords(keywords: string[]) {
@@ -417,4 +575,13 @@ export class EventUpdateFormDialogComponent implements OnInit {
         .concat(value.replace(pitchSubstring + ';', ''));
     }));
   }
+
+  private songEditFormHasValues() {
+    return this.songEditForm.value.songId !== null &&
+      this.songEditForm.value.title !== null &&
+      this.songEditForm.value.tonality !== null &&
+      this.songEditForm.value.progression !== null;
+  }
+
+
 }

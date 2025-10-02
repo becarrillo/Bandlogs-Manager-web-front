@@ -1,21 +1,20 @@
 <div id="homeMenu">
-  <button mat-icon-button ngClass="mat-icon-button" [matMenuTriggerFor]="menu"
-    aria-label="Home icon-button with a menu">
-    <mat-icon id="menuIcon">more_vert</mat-icon>
-  </button>
-  <mat-menu #menu="matMenu">
-    @if (getToken().length>0) {
-      <button
-        [matTooltip]="'Dashboard de '.concat(loggedInUserRole.nickname)" 
-        mat-menu-item
-      >
+  <div id="menuContainer">
+    <button mat-icon-button ngClass="mat-icon-button" [matMenuTriggerFor]="menu"
+      aria-label="Home icon-button with a menu">
+      <mat-icon id="menuIcon">more_vert</mat-icon>
+    </button>
+  
+    <mat-menu #menu="matMenu">
+      @if (getToken().length>0) {
+      <button [matTooltip]="'Dashboard de '.concat(loggedInUserRole.nickname)" mat-menu-item>
         <a routerLink="/dashboard" class="link">
           <mat-icon>person</mat-icon>
           <span>{{loggedInUserRole.nickname}}</span>
         </a>
       </button>
       <button mat-menu-item>
-        <a routerLink="/calendario?token=" class="link">
+        <a routerLink="/calendario" class="link">
           <mat-icon>calendar_today</mat-icon>
           <span>Calendario</span>
         </a>
@@ -24,15 +23,10 @@
         <mat-icon>logout</mat-icon>
         <span>Cerrar sesión</span>
       </button>
-    }
-    @else {
+      }
+      @else {
       <button mat-menu-item>
-        <a
-          [routerLink]="'/calendario?token='.concat(encodeURIParamValue(getToken()))" 
-          class="link"
-          [queryParams]="{ token: decodeURIParamValue(getToken()) }"
-          [queryParamsHandling]="'merge'"
-        >
+        <a routerLink="/calendario" class="link">
           <mat-icon>calendar_today</mat-icon>
           <span>Calendario</span>
         </a>
@@ -43,8 +37,9 @@
           <span>Registrarse</span>
         </a>
       </button>
-    }
-  </mat-menu>
+      }
+    </mat-menu>
+  </div>
   <span>Bandlogs::Home</span>
 </div>
 <mat-card ngClass="home-card" appearance="outlined">
@@ -52,21 +47,17 @@
     <div mat-card-avatar class="example-header-image"></div>
     <mat-card-title ngClass="card-title">Bandlogs Manager</mat-card-title>
     <mat-card-subtitle ngClass="card-subtitle">
-      por: 
-      <span id="author">Brando Elí Carrillo Pérez</span> 
+      por:
+      <span id="author">Brando Elí Carrillo Pérez</span>
       (artista/desarrollador software)
     </mat-card-subtitle>
   </mat-card-header>
-  <img
-    mat-card-image
-    width="328"
-    height="320"
-    src="https://storage.cloud.google.com/brando-projects-assets/bandlogs-manager/logo.png"
-    alt="Image of app logo"
-  />
+  <img mat-card-image width="328" height="320"
+    src="https://storage.cloud.google.com/brando-projects-assets/bandlogs-manager/logo.png" alt="Image of app logo" />
   <mat-card-content>
     <p>
-      <strong>¡Bienvenido a Bandlogs Manager!</strong> La aplicación web diseñada para facilitar la gestión de bandas musicales y sus actividades.
+      <strong>¡Bienvenido a Bandlogs Manager!</strong> La aplicación web diseñada para facilitar la gestión de bandas
+      musicales y sus actividades.
       <br><br>
       <strong>Características principales:</strong>
     </p>

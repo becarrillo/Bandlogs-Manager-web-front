@@ -8,7 +8,10 @@
         <mat-card-content>
             <div class="content">
                 <span>Tonalidad: {{song.tonality}}</span>
-                <mat-chip-set aria-label="Acordes" class="repertoire-chip-set">
+                <mat-chip-set
+                    aria-label="Acordes"
+                    class="repertoire-chip-set"
+                >
                     @for (chord of song.progression; track $index) {
                     <mat-chip ngClass="chord-chip">{{chord}} <button
                             (click)="removeStagedReactiveRepertoireChord(song.title, $index)"
@@ -19,7 +22,12 @@
         </mat-card-content>
         <mat-card-actions>
             <div class="action-btns">
-                <button mat-icon-button><mat-icon>edit</mat-icon></button>
+                <button
+                    mat-icon-button
+                    (click)="editStagedSong(song); cancelStagedSong(song);"
+                >
+                    <mat-icon>edit</mat-icon>
+                </button>
                 <button mat-icon-button (click)="cancelStagedSong(song)"><mat-icon>delete_forever</mat-icon></button>
             </div>
         </mat-card-actions>
@@ -53,9 +61,16 @@
 
         <mat-form-field id="addChord" appearance="fill">
             <mat-label>Acordes</mat-label>
-            <mat-chip-grid #reactiveChipGrid aria-label="Enter reactive form keywords" formControlName="progression">
+            <mat-chip-grid
+                #reactiveChipGrid
+                aria-label="Enter reactive form keywords"
+                formControlName="progression"
+                cdkDropList
+                cdkDropListOrientation="horizontal"
+                (cdkDropListDropped)="dragAndDropOnReactiveKeywords($event)"
+            >
                 @for (keyword of reactiveKeywords(); track $index) {
-                <mat-chip-row (removed)="removeReactiveChordKeyword(keyword)">
+                <mat-chip-row ngClass="chord-chip" (removed)="removeReactiveChordKeyword(keyword)" cdkDrag>
                     {{keyword}}
                     <button matChipRemove [attr.aria-label]="'remove reactive chord: '.concat(keyword)">
                         <mat-icon>cancel</mat-icon>
@@ -67,13 +82,39 @@
                 [matChipInputSeparatorKeyCodes]="separatorKeysCodes" #chordEntry
                 formControlName="progressionChordOption" (matChipInputTokenEnd)="addReactiveChordKeyword($event)" />
             <mat-autocomplete #auto1="matAutocomplete" (optionSelected)="onProgressionChordKeywordSelected($event)">
-                @for (option of filteredProgressionOptions | async; track $index) {
+                @for (option of filteredProgressionOptions | async; track $index) {    
                 <mat-option
                     [value]="
-                        option.pitch.concat(option.suffix)
-                    ">
+                        option.pitch.includes('/') ? (
+                            newSongForm.value.tonality!.startsWith('Sib') ||
+                            newSongForm.value.tonality!.startsWith('Lab') ||
+                            newSongForm.value.tonality!.startsWith('Do') ||
+                            (newSongForm.value.tonality!.startsWith('Rem') && !option.pitch.startsWith('Do#') && !option.pitch.startsWith('Fa#')) ||
+                            newSongForm.value.tonality!.startsWith('Mib') ||
+                            (newSongForm.value.tonality!.startsWith('Fa') && !newSongForm.value.tonality!.includes('#')) ||
+                            (newSongForm.value.tonality!.startsWith('Solm') && !option.pitch.startsWith('Fa#')) ? (
+                                option.pitch.substring(option.pitch.indexOf('/') + 1).concat(option.suffix)
+                            ) : (
+                                option.pitch.substring(0, option.pitch.indexOf('/')).concat(option.suffix)
+                            )
+                        ) : option.pitch.concat(option.suffix)
+                    "
+                >
+                    <!--Logic to show with the correct enharmonic based on the selected tonality-->
                     {{
-                        option.pitch.concat(option.suffix)
+                        option.pitch.includes('/') ? (
+                            newSongForm.value.tonality!.startsWith('Sib') ||
+                            newSongForm.value.tonality!.startsWith('Lab') ||
+                            newSongForm.value.tonality!.startsWith('Do') ||
+                            (newSongForm.value.tonality!.startsWith('Rem') && !option.pitch.startsWith('Do#') && !option.pitch.startsWith('Fa#')) ||
+                            newSongForm.value.tonality!.startsWith('Mib') ||
+                            (newSongForm.value.tonality!.startsWith('Fa') && !newSongForm.value.tonality!.includes('#')) ||
+                            (newSongForm.value.tonality!.startsWith('Solm') && !option.pitch.startsWith('Fa#')) ? (
+                                option.pitch.substring(option.pitch.indexOf('/') + 1).concat(option.suffix)
+                            ) : (
+                                option.pitch.substring(0, option.pitch.indexOf('/')).concat(option.suffix)
+                            )
+                        ) : option.pitch.concat(option.suffix)
                     }}
                 </mat-option>
                 }
@@ -83,7 +124,7 @@
         <div class="btn-group-container">
             <button type="button" mat-raised-button matTooltip="Enlista canción al repertorio" (click)="toStageSong()"
                 id="addSongBtn" [disabled]="newSongForm.invalid">
-                Agregar <strong>"{{newSongForm.value.title}}"</strong> al repertorio
+                Agregar <strong>"{{newSongForm.value.title}}"</strong> en cola del repertorio
             </button>
         </div>
         }

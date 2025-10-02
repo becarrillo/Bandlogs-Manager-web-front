@@ -4,7 +4,6 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { EventService } from '../../services/event.service';
 import { BandService } from '../../services/band.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Band } from '../../interfaces/band';
@@ -58,9 +57,7 @@ import { IUserRole } from '../../interfaces/i-user-role';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EventCreateFormComponent {
-  private readonly eventService = inject(EventService);
   private readonly bandService = inject(BandService);
-  private readonly authService = inject(AuthService);
   readonly musicalUtilService = inject(MusicalUtilService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -99,9 +96,14 @@ export class EventCreateFormComponent {
     this.route.paramMap.subscribe(params => {
       const bandId = params.get('id-de-banda');
       if (bandId !== null) {
-        this.bandService.getBandById(parseInt(decodeURI(bandId))).subscribe({
+        const bandIdAsInt = parseInt(decodeURI(bandId));
+        this.bandService.getBandById(bandIdAsInt).subscribe({
           next: (band: Band) => {
             this.bandSignal.set(band);
+            this.cookieService.set(
+              'navigation',
+              `/dashboard/bandas/banda/${bandIdAsInt}/eventos/agregar`
+            );
           },
           error: (err) => {
             if (err.status === 404) {
@@ -158,16 +160,19 @@ export class EventCreateFormComponent {
           }
           if (song.tonality.startsWith(split.at(1)!))
             tonalitySuffix = song.tonality.replace(split.at(1)!, '');
-        }
-        if (song.tonality.startsWith(value)) {
-          if (song.tonality.includes('b'))
-            tonalitySuffix = song.tonality.replace(value + 'b', '');
-          else if (song.tonality.includes('#'))
-            tonalitySuffix = song.tonality.replace(value + '#', '');
-          else
-            tonalitySuffix = song.tonality.replace(value, '');
+        } else {
+          if (song.tonality.startsWith(value)) {
+            if (song.tonality.includes('b'))
+              tonalitySuffix = song.tonality.replace(value + 'b', '');
+            else if (song.tonality.includes('#'))
+              tonalitySuffix = song.tonality.replace(value + '#', '');
+            else
+              tonalitySuffix = song.tonality.replace(value, '');
+          }
         }
       });
+      if (tonalitySuffix.length===0)
+        tonalitySuffix = ' ';
 
       newSongs.push({
         title: song.title,
@@ -207,68 +212,54 @@ export class EventCreateFormComponent {
     }
 
     var date!: Date;
-    if (typeof this.eventCreateForm.value.date !== 'undefined' && this.eventCreateForm.value.date !== null) {
+    if (typeof this.eventCreateForm.value.date !== 'undefined' && this.eventCreateForm.value.date !== null)
       date = this.eventCreateForm.value.date;
-    }
     var description!: string;
-    if (typeof this.eventCreateForm.value.description !== 'undefined' && this.eventCreateForm.value.description !== null) {
+    if (typeof this.eventCreateForm.value.description !== 'undefined' && this.eventCreateForm.value.description !== null)
       description = this.eventCreateForm.value.description;
-    }
     var location: string | null = null;
-    if (typeof this.eventCreateForm.value.location !== 'undefined' && this.eventCreateForm.value.location !== null) {
+    if (typeof this.eventCreateForm.value.location !== 'undefined' && this.eventCreateForm.value.location !== null)
       location = this.eventCreateForm.value.location;
+    const eventData: Omit<Event, 'eventId'> = {
+      description,
+      date,
+      location,
+      repertoire: newSongs
+    };
+    this.bandService
+        .patchEventToBand(this.bandSignal()?.bandId!, eventData)
+        .subscribe({
+          next: () => {
+            this.eventCreateForm.reset();
+            this.loading.set(false);
+            window.alert("Se creó el evento con éxito");
+            this.router.navigateByUrl('/dashboard/bandas/'+this.bandSignal()?.bandId!);
+          },
+          error: (err) => {
+            onError(err)
+          }
+        });
+    const onError = (err : any) => {
+      if (err.status === 401) {
+        localStorage.removeItem('accessToken');
+        this.cookieService.delete('navigation');
+        AppComponent.userIsAuthenticated.set(false);
+        window.alert("Sesión expirada, serás redirigido al login");
+        this.router.navigateByUrl('/login');
+      } else if (err.status===403) {
+        window.alert(
+          "No tienes suficientes permisos para crear el evento en la banda específica"
+        );
+        this.loading.set(false);
+      } else if (err.status===500) {
+        window.alert("Error interno del servidor")
+      } else {
+        console.error('Error trying to create the event: ', err);
+        window.alert(
+          'Error desconocido, no se pudo crear el evento. Inténtalo de nuevo más tarde.'
+        );
+      }
     }
-    var loggedInUserRole!: IUserRole;
-    this.authService
-      .getAuthenticatedUserRole()
-      .subscribe({
-        next: (value) => {
-          loggedInUserRole = value;
-          if (loggedInUserRole.nickname === this.bandSignal()?.director) {
-            const eventData: Omit<Event, 'eventId'> = {
-              description,
-              date,
-              location,
-              repertoire: newSongs
-            };
-            this.bandService
-                .patchEventToBand(this.bandSignal()?.bandId!, eventData)
-                .subscribe({
-                  next: () => {
-                    this.eventCreateForm.reset();
-                    this.loading.set(false);
-                    window.alert("Se creó el evento con éxito");
-                    window.location.pathname = '/dashboard/bandas/'+this.bandSignal()?.bandId!;
-                  },
-                  error: (err) => {
-                    if (err.status === 401) {
-                      localStorage.removeItem('accessToken');
-                      this.cookieService.delete('navigation');
-                      AppComponent.userIsAuthenticated.set(false);
-                      window.alert("Sesión expirada, serás redirigido al login");
-                      window.location.pathname = "/login";
-                    } else {
-                      console.error('Error trying to create the event:', err);
-                      window.alert('No se pudo crear el evento. Inténtalo de nuevo más tarde.');
-                    }
-                  }
-                });
-          }
-        },
-        error: (err) => {
-          if (err.status === 401) {
-            localStorage.removeItem('accessToken');
-            AppComponent.userIsAuthenticated.set(false);
-            window.alert("Sesión expirada, vuelve a ingresar. Serás redirigido a '/login'");
-            window.location.pathname = '/login';
-          } else if (err.status === 500) {
-            window.alert("Error interno del servidor");
-          } else {
-            console.error('Error trying to create the event:', err);
-            window.alert('No se pudo crear el evento. Inténtalo de nuevo más tarde.');
-          }
-        }
-      });
   }
 
   removeReactiveKeyword(keyword: string) {

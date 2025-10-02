@@ -9,25 +9,24 @@ import { Tonality } from '../interfaces/tonality';
 })
 export class SongService {
   private readonly http = inject(HttpClient);
+  private readonly authHeader = `Bearer ${localStorage.getItem('accessToken')}`;
 
   getSongById(id : number) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
     return this.http.get<Song>(
       `http://localhost:8080/api/v1/repertorio/${id}`,
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}
+        headers: {'Authorization': this.authHeader}
       }
     );
   }
 
   transportSong(songId : number, tonality : Tonality) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
     return this.http.patch<Song>(
       `http://localhost:8080/api/v1/repertorio/${songId}/transportar`,
       tonality,
       {
         headers: {
-          'Authorization': AUTHORIZATION_HEADER_VALUE,
+          'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'
         }
       }
@@ -35,31 +34,27 @@ export class SongService {
   }
 
   updateSong(songId : number, song : Song) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     return this.http.put<Song>(
       `http://localhost:8080/api/v1/repertorio/${songId}/modificar`,
       song,
       {
         headers: {
-          'Authorization': AUTHORIZATION_HEADER_VALUE,
+          'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'
         }
       }
     );
   }
 
-  alertAuthorization() {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-    window.alert(AUTHORIZATION_HEADER_VALUE);
-  }
 
   deleteSong(song : Song) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
     this.http.delete(
       "http://localhost:8080/api/v1/repertorio/eliminar",
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE, 'Content-Type': 'application/json;charset=utf-8'},
+        headers: {
+          'Authorization': this.authHeader,
+          'Content-Type': 'application/json;charset=utf-8'
+        },
         body: song
       }
     );

@@ -2,7 +2,11 @@
     <nav class="side-menu">
         <mat-list class="side-menu-list">
             <mat-list-item>
-                <button matTooltip="agregar nuevo miembro" mat-raised-button [disabled]="band().director!==userRoleObject.nickname">
+                <button
+                    matTooltip="agregar nuevo miembro"
+                    mat-raised-button
+                    [disabled]="band().director!==userRoleObject.nickname"
+                >
                     <mat-icon class="menu-item-icon">person_add</mat-icon>
                 </button>
             </mat-list-item>
@@ -52,7 +56,6 @@
                     <mat-icon id="editIcon">edit</mat-icon>
                 </button>
                 }
-                
             </div>
             <p>Director: {{band().director}}</p>
             <p>Género: {{getMusicalGenreString()}}</p>
@@ -152,13 +155,6 @@
                                 (click)="openFormDialog(getManagingBandEnumType().TO_DELETE_EVENT_OF_BAND, {event: element})"
                             >
                                 <mat-icon>delete_forever</mat-icon>
-                            </button>
-                            <button
-                                mat-icon-button
-                                [matTooltip]="'Modificar evento: '.concat(element.description+' de la banda') "
-                                (click)="openFormDialog(getManagingBandEnumType().TO_UPDATE_EVENT_OF_BAND, element)"
-                            >
-                                <mat-icon>edit</mat-icon>
                             </button>
                         </td>
                     </ng-container>

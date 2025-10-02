@@ -9,7 +9,7 @@ import { IUserRole } from '../interfaces/i-user-role';
   providedIn: 'root'
 })
 export class AuthService {
-  http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   /**
    * It gets a logged in user object compound by attributes of
    * nickname and role, from server

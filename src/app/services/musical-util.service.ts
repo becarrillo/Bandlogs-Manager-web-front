@@ -23,6 +23,7 @@ export class MusicalUtilService {
           ((!tonality.startsWith('Sib') &&
           !tonality.startsWith('Re') &&
           !tonality.startsWith('Mib') &&
+          !tonality.startsWith('Fa') &&
           !tonality.startsWith('Sol') &&
           !tonality.startsWith('Lab') &&
           !tonality.includes('m')) || tonality.startsWith("Fa#"))
@@ -56,10 +57,14 @@ export class MusicalUtilService {
       case 6:
         if (
           tonality !== undefined &&
-          !tonality.startsWith('Fa#') &&
+          (!tonality.startsWith('Fa#') &&
           !tonality.startsWith('Si') &&
-          !tonality.startsWith('Do#') &&
-          !tonality.startsWith('Mi')
+          !tonality.startsWith('Do#')) &&
+          (tonality?.startsWith('Mib') ||
+          tonality?.startsWith('Reb') ||
+          tonality?.startsWith('Lab') ||
+          tonality?.startsWith('Sibm') ||
+          tonality?.includes('m'))
         ) {
           return "Mib" as string;
         }

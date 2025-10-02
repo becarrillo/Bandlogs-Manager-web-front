@@ -7,81 +7,69 @@ import { Params } from '@angular/router';
   providedIn: 'root'
 })
 export class EventService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly authHeader = `Bearer ${localStorage.getItem('accessToken')}`;
 
   getEventById(id : string) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     return this.http.get<Event>(
       "http://localhost:8080/api/v1/eventos/".concat(id),
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}
+        headers: {'Authorization': this.authHeader}
       }
     );
   }
 
   listAllEvents() {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     return this.http.get<Event>(
       "http://localhost:8080/api/v1/eventos",
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}
+        headers: {'Authorization': this.authHeader}
       }
     );
   }
 
   listEventsByDate(date : Date) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     const params : Params = {};
     params['fecha'] = date;
 
     return this.http.get<Event[]>(
       "http://localhost:8080/api/v1/eventos/",
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE},
+        headers: {'Authorization': this.authHeader},
         params
       }
     );
   }
 
   addEvent(event : Omit<Event, 'eventId'>) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-    
     return this.http.post<Event>(
       "http://localhost:8080/api/v1/eventos/agregar",
       event,
       {
         headers: {
-          'Authorization': AUTHORIZATION_HEADER_VALUE,
+          'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'
         }
       }
     );
   }
 
-  deleteEvent(event : Event) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
-    this.http.delete(
+  deleteEvent(event : Event) {this.http.delete(
       "http://localhost:8080/api/v1/eventos/eliminar",
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE},
+        headers: {'Authorization': this.authHeader},
         body: event
       }
     );
   }
 
   updateEvent(eventId : string, event : Event) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-    
     return this.http.put<Event>(
       `http://localhost:8080/api/v1/eventos/${eventId}/modificar`,
       event,
       {
         headers: {
-          'Authorization': AUTHORIZATION_HEADER_VALUE,
+          'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'
         }
       }

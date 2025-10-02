@@ -7,7 +7,10 @@
 
 @media screen and (min-width: 768px) {
     #container {
-        place-items: center;
+        padding-left: 7em;
+        padding-top: 1em;
+        padding-right: 7em;
+        padding-bottom: 1em;
     }
 }
 

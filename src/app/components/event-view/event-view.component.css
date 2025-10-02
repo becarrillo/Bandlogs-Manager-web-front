@@ -1,3 +1,22 @@
+.add-song-btn {
+    background-color: #000000;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    column-gap: 1rem;
+    padding: 2.5rem;
+}
+
+#description {
+    font-style: italic;
+}
+
+h5, p {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
 #titleContainer {
     display: flex;
     justify-content: space-between;
@@ -6,4 +25,17 @@
 .table-container {
     max-height: 15rem;
     overflow-y: auto;
+    margin-bottom: 3px;
+}
+
+td, th, tr {
+    padding: 1em;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: black;
+    color: white;
 }

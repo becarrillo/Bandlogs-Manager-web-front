@@ -1,7 +1,7 @@
 <mat-dialog-content>
     <ng-container *ngIf="!chordNameInputIsShown(); else songProgressionTemplate;">
         <div id="containerContent">
-            <h6>{{title}} <small>(acordes)</small></h6>
+            <h6>{{title}} <small class="song-tonality-pitch">({{getSongTonality()}})</small></h6>
             <mat-list>
                 @for (chord of reactiveProgression(); track $index) {
                 <mat-list-item>

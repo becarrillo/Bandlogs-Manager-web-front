@@ -1,0 +1,31 @@
+<div class="key-transposition-container">
+    <p>Transportar canción: {{songInfo()?.title}}</p>
+    <mat-form-field appearance="outline">
+        <mat-label>Tonalidad de canción</mat-label>
+        <input matInput type="text" [(ngModel)]="tonality" [disabled]="true" />
+    </mat-form-field>
+
+    <div class="current-progression">
+        <span>Progresión de acordes: </span>
+        <mat-chip-set aria-label="Chord keywords of song" class="current-progression-chips">
+            @for (keyword of keywords(); track $index) {
+            <mat-chip>
+                {{getLatinNotationKey(keyword)}}
+            </mat-chip>
+            }
+        </mat-chip-set>
+    </div>
+    
+    <div class="harmonic-keys-selection">
+        <span>Selecciona la nueva tonalidad:</span>
+        <div class="harmonic-keys-circle">
+            @for (key of harmonicKeys; track $index) {
+            <button (click)="selectKey(key)"
+                [disabled]="songInfo()?.tonality!.startsWith(key)">
+                {{ key }}
+            </button>
+            }
+        </div>
+    </div>
+    
+</div>

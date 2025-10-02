@@ -25,7 +25,10 @@
       </mat-card-footer>
       } @else {
       <mat-card-content>
-        <p>Como administrador puedes obtener el listado de todas las bandas registradas en Bandlogs-Manager</p>
+        <p>
+          Como administrador puedes obtener el listado de todas las bandas 
+          registradas en Bandlogs-Manager
+        </p>
       </mat-card-content>
       <mat-card-footer>
         <div>
@@ -37,14 +40,41 @@
     </mat-card>
     <app-logged-in-user-menu section="bandas" (menuItemEmitter)="handleMenuItem($event)">
     </app-logged-in-user-menu>
-    
+    @if (menuItemSelectionIsConsult()) {
+      <div id="searchBandForm">
+        <mat-form-field appearance="fill" class="search-band-field">
+          <mat-label>Consultar banda(s)</mat-label>
+          <input
+            type="text"
+            matInput
+            id="bandNameControl"
+            [formControl]="bandNameControl"
+            placeholder="Ingresa nombre de banda"
+            required
+          />
+          <mat-error *ngIf="bandNameControl.invalid">
+            El valor debe ser de al menos 1 caracter.
+          </mat-error>
+        </mat-form-field>
+        <button type="submit" ngClass="search" mat-mini-fab (click)="onSearchBand()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+    }
     <p id="longText" *ngIf="bandsAreListed() && _bands.length >= 1">{{longText}}</p>
-    <button mat-mini-fab id="addBandBtn" matTooltip="Agregar banda" (click)="openFormDialog(getManagingBandEnumType().TO_CREATE, {
+    <button
+      mat-mini-fab
+      id="addBandBtn"
+      matTooltip="Agregar banda"
+      (click)="
+        openFormDialog(
+          managingBandActionEnumType.TO_CREATE, {
             loggedInUsername: userRoleObject.nickname,
             loading,
             cookieService
-        }
-      )"
+          }
+        )
+      "
     >
       <mat-icon>add</mat-icon>
     </button>
@@ -107,7 +137,7 @@
                 <button
                   mat-menu-item
                   (click)="loading.set(true); fetchBands();"
-                  [disabled]="!bandsAreFilteredByDirector"
+                  [disabled]="!bandsAreFilteredByDirector && !allBandsAreListedAsAdmin"
                 >
                   Bandas donde soy miembro
                 </button>
@@ -115,7 +145,7 @@
                 <button
                   mat-menu-item
                   (click)="filterBandsByUserAsDirector(userRoleObject.nickname)"
-                  [disabled]="bandsAreFilteredByDirector"
+                  [disabled]="bandsAreFilteredByDirector && !allBandsAreListedAsAdmin"
                 >
                   Bandas donde soy director
                 </button>
@@ -128,7 +158,7 @@
             </button>
             @if (userRoleObject.role.toString()==='ROLE_ADMIN') {
             <button class="band-delete" (click)="openFormDialog(
-                    getManagingBandEnumType().TO_DELETE, {
+                    managingBandActionEnumType.TO_DELETE, {
                       band: element
                     })
                   " mat-icon-button>
@@ -137,14 +167,14 @@
             } @else {
             @if (element.director===userRoleObject.nickname) {
             <button class="band-update" (click)="openFormDialog(
-                      getManagingBandEnumType().TO_UPDATE, {
+                      managingBandActionEnumType.TO_UPDATE, {
                         band: element
                       })
                     " mat-icon-button>
               <mat-icon>edit</mat-icon>
             </button>
             <button class="band-delete" (click)="openFormDialog(
-                      getManagingBandEnumType().TO_DELETE, {
+                      managingBandActionEnumType.TO_DELETE, {
                         band: element
                       })
                     " mat-icon-button>
@@ -163,7 +193,7 @@
     }
     @else {
       @if (bandsAreListed()) {
-        <p>No estás asociado a banda alguna, o no eres director.</p>
+        <p>No se ha encontrado banda alguna.</p>
       }
     }
     @if(userRoleObject.role.toString()!=='ROLE_ADMIN') {
@@ -172,42 +202,14 @@
         <mat-card-title>Agrega un músico a bandas que diriges donde todavía no es un miembro</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div id="userFormFieldContainer">
-          <mat-form-field class="user-form-field">
-            <mat-label>nombre de usuario</mat-label>
-            <input
-              #filterInput
-              type="text"
-              [matAutocomplete]="auto"
-              (focus)="onFilterUsersInputFocus()"
-              (input)="filterUsers()"
-              [formControl]="userNicknameControl"
-              matInput
-             />
-            <mat-autocomplete requireSelection #auto="matAutocomplete" id="userAutocomplete">
-              @for (user of filteredUsers(); track user.userId) {
-              <mat-option [value]="user.nickname" class="user-option" [matTooltip]="user.nickname">
-                {{user.nickname}}
-                <span class="user-fullname">{{user.firstname}} {{user.lastname}}</span>
-              </mat-option>
-              }
-            </mat-autocomplete>
-            <mat-error
-              *ngIf="
-                userNicknameControl.invalid 
-                && userNicknameControl.hasError('required') 
-                && userNicknameControl.touched
-              "
-            >
-              El campo es obligatorio
-            </mat-error>
-          </mat-form-field>
-          <button type="button" id="search" [disabled]="userNicknameControl.invalid" (click)="openFormDialog(
-              getManagingBandEnumType().TO_ADD_MEMBER_TO_BAND)
-            " mat-mini-fab>
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
+        <app-search-user-form-field
+          (searchUsernameInput)="
+            onSearchUsernameInput($event);
+            openFormDialog(managingBandActionEnumType.TO_ADD_MEMBER_TO_BAND);
+          "
+          [loggedInUserRole]="userRoleObject"
+        >
+        </app-search-user-form-field>
       </mat-card-content>
       <mat-card-footer class="card-footer">
         <div>

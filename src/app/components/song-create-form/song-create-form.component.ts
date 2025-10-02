@@ -1,4 +1,5 @@
-import { Component, ElementRef, EventEmitter, inject, OnInit, Output, signal, ViewChild } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, EventEmitter, inject, OnInit, Output, signal, ViewChild } from '@angular/core';
+import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +23,8 @@ import { MusicalUtilService } from '../../services/musical-util.service';
   selector: 'app-song-create-form',
   standalone: true,
   imports: [
+    CdkDropList,
+    CdkDrag,
     CommonModule,
     FormsModule,
     MatAutocompleteModule,
@@ -37,13 +40,13 @@ import { MusicalUtilService } from '../../services/musical-util.service';
     ReactiveFormsModule
   ],
   templateUrl: './song-create-form.component.html',
-  styleUrl: './song-create-form.component.css'
+  styleUrl: './song-create-form.component.css',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class SongCreateFormComponent implements OnInit {
   musicalUtilService = inject(MusicalUtilService);
   protected newSongForm = new FormBuilder().group({
     title: new FormControl<string>('', [Validators.required, Validators.minLength(3)]),
-    pitch: new FormControl<string | { pitch: Pitch, suffix: string } | null>(null),
     tonality: new FormControl<string>('', [Validators.required]),
     progression: new FormControl<string[]>({ value: [], disabled: true }),
     progressionChordOption: new FormControl<string>('')
@@ -83,6 +86,8 @@ export class SongCreateFormComponent implements OnInit {
 
   addReactiveChordKeyword(event: MatChipInputEvent) {
     const value = (event.value || '').trim();
+    // Clear the input value
+    event.chipInput!.clear();
 
     var kewywordIsValid = false;
     LATIN_STRING_PITCHES.forEach(p => {
@@ -93,15 +98,32 @@ export class SongCreateFormComponent implements OnInit {
     if (kewywordIsValid) {
       this.reactiveKeywords.update(keywords => [...keywords, value]);
       this.newSongForm.controls.progressionChordOption.setValue('');
-      // Clear the input value
-      event.chipInput!.clear();
     }
+    
   }
 
   cancelStagedSong(song: { title: string, tonality: string, progression: string[] }) {
     this.reactiveRepertoire.update(value => {
       return value.filter(v => v !== song);
     })
+  }
+
+  dragAndDropOnReactiveKeywords(ev: CdkDragDrop<string[]>) {
+    this.reactiveKeywords.update(keywords => {
+      moveItemInArray(keywords, ev.previousIndex, ev.currentIndex);
+      return [...keywords];
+    });
+  }
+
+  editStagedSong(song: { title: string, tonality: string, progression: string[] }) {
+    this.newSongForm.controls.progression.enable();
+    this.reactiveKeywords.set([...song.progression]);
+    this.newSongForm.setValue({
+      title: song.title,
+      tonality: song.tonality,
+      progressionChordOption: '', 
+      progression: song.progression
+    });
   }
 
   getLatinStrTonalityOptions() {
@@ -134,27 +156,9 @@ export class SongCreateFormComponent implements OnInit {
         ) : (
           split.at(0)!
         );
-      } else {
-        return this.newSongForm.value.tonality!.startsWith('Do#') && index === 8 ? 'Fa' : value;
       }
+      return value;
     });
-  }
-
-  toStageSong() {
-    const song = {
-      title: this.newSongForm.value.title!,
-      tonality: this.newSongForm.value.tonality!,
-      progression: this.newSongForm.value.progression!
-    }
-
-    this.reactiveRepertoire.update(value => {
-      return [...value, song]
-    });
-    this.filteredTonalityOptions.set(this.getLatinStrTonalityOptions());
-    this.reactiveKeywords.set([]);
-    
-    this.newSongForm.reset();
-    this.newSongForm.controls.progression.disable();
   }
 
   onSubmit() {
@@ -174,9 +178,9 @@ export class SongCreateFormComponent implements OnInit {
   }
 
   removeStagedReactiveRepertoireChord(songTitle: string, index: number) {
-    this.reactiveRepertoire.update(value => {
-      value.find(s => s.title === songTitle)?.progression.splice(index, 1);
-      return [...value];
+    this.reactiveRepertoire.update(values => {
+      values.find(s => s.title === songTitle)?.progression.splice(index, 1);
+      return values;
     });
   }
 
@@ -186,10 +190,8 @@ export class SongCreateFormComponent implements OnInit {
     ev.option.deselect();
     this.filteredProgressionOptions = this.newSongForm.controls.progressionChordOption.valueChanges.pipe(
       startWith(''),
-      map(value => this._filter(this.getChords(), value || '')
-      )
+      map(value => this._filter(this.progressionOptions(), value || ''))
     );
-    this.progressionChordInput.nativeElement.setAttribute('value', '');
   }
 
   onTonalityInputKeyDown(ev: Event) {
@@ -208,6 +210,30 @@ export class SongCreateFormComponent implements OnInit {
       this.newSongForm.controls.progression.enable()
     ) : (
       this.newSongForm.controls.progression.disable()
+    );
+  }
+  
+  toStageSong() {
+    const song = {
+      title: this.newSongForm.value.title!,
+      tonality: this.newSongForm.value.tonality!,
+      progression: this.newSongForm.value.progression!
+    }
+    this.filteredTonalityOptions.set(this.getLatinStrTonalityOptions());
+    this.reactiveKeywords.set([]);
+    
+    this.newSongForm.controls.title.setValue('');
+    this.newSongForm.controls.tonality.setValue('');
+    this.newSongForm.controls.progression.setValue([]);
+    this.newSongForm.controls.progression.disable();
+    this.reactiveRepertoire.update(values => {
+      const result = values;
+      result.push(song);
+      return result;
+    });
+    this.filteredProgressionOptions = this.newSongForm.controls.progressionChordOption.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(this.progressionOptions(), value || ''))
     );
   }
 }

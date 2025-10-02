@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, effect, ElementRef, inject, signal, ViewChild } from '@angular/core';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject, signal, WritableSignal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -14,8 +13,6 @@ import { Band } from '../../interfaces/band';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { UserService } from '../../services/user.service';
-import { User } from '../../interfaces/user';
 import { BandService } from '../../services/band.service';
 import { CookieService } from 'ngx-cookie-service';
 import { Router, RouterLink } from '@angular/router';
@@ -29,6 +26,7 @@ import { AppComponent } from '../../app.component';
 import { BandCreateFormDialogComponent } from '../band-create-form-dialog/band-create-form-dialog.component';
 import { BandDeleteDialogComponent } from '../band-delete-dialog/band-delete-dialog.component';
 import { MatMenuModule } from '@angular/material/menu';
+import { SearchUserFormFieldComponent } from '../search-user-form-field/search-user-form-field.component';
 
 
 @Component({
@@ -37,7 +35,6 @@ import { MatMenuModule } from '@angular/material/menu';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatAutocompleteModule,
     MatButtonModule,
     MatCardModule,
     MatFormField,
@@ -49,7 +46,8 @@ import { MatMenuModule } from '@angular/material/menu';
     FormSuspenseComponent,
     LoggedInUserMenuComponent,
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    SearchUserFormFieldComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,33 +56,31 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class ManageBandsComponent {
   protected readonly bandService = inject(BandService);
-  protected readonly userService = inject(UserService);
   protected readonly authService = inject(AuthService);
   protected readonly cookieService = inject(CookieService);
   readonly router = inject(Router);
 
+  menuItemSelectionIsConsult = signal(false);
   userRoleObject!: IUserRole;
   loading = signal(false);
   readonly dialog = inject(MatDialog);
-  protected userNicknameControl = new FormControl('', Validators.required);
+  protected bandNameControl = new FormControl('', [Validators.required, Validators.minLength(1)]);
   longText!: string;
   private static bands: Band[] = [];
   readonly bandsAreListed = signal(false);
-  filteredUsers = signal<User[]>([]);
+  filteredBands: WritableSignal<Band[]> = signal([]);
   allBandsAreListedAsAdmin = false;
   bandsAreFilteredByDirector = false;
   displayedColumns: string[] = ['name', 'director', 'musicalGenre', 'action'];
   protected dataSource = new MatTableDataSource<Band, MatPaginator>([]);
-
-  /** It is used to filter users in the autocomplete input */
-  @ViewChild('filterInput') input!: ElementRef<HTMLInputElement>;
+  protected searchUserInputValue = '';
 
   constructor() {
     this.authService.getAuthenticatedUserRole()
       .subscribe({
         next: (value) => {
           this.userRoleObject = value;
-          if (this.userRoleObject.role===UserRole.ROLE_ADMIN)
+          if (this.userRoleObject.role === UserRole.ROLE_ADMIN)
             this.allBandsAreListedAsAdmin = true;
         },
         error: (err) => {
@@ -132,119 +128,79 @@ export class ManageBandsComponent {
         });
     }
 
-    /** this constant function doesn't return anything and it is used when the user
-     * is a member of a band and it is used to set all bands in the dataSource attribute */
-    const setBandsByMember = (nickname: string) => {
-      this.bandService.listBandsByMemberUserNickname(nickname)
-        .subscribe({
-          next: (value) => {
-            ManageBandsComponent.bands = value;
-            this.dataSource = new MatTableDataSource<Band, MatPaginator>(ManageBandsComponent.bands);
-            this.allBandsAreListedAsAdmin = false;
-            this.bandsAreListed.set(true);
-            if (this.bandsAreFilteredByDirector)
-              this.bandsAreFilteredByDirector = false;
-            this.loading.set(false);
-          },
-          error: (err) => {
-            if (err.status === 401) {
-              window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a '/login'");
-              this.loading.set(false);
-              this.cookieService.delete('navigation');
-              localStorage.removeItem('accessToken');
-              AppComponent.userIsAuthenticated.set(false);
-              this.router.navigateByUrl('/login');
-            } else if (err.status === 403) {
-              window.alert("No tienes permisos para realizar esta operación");
-              this.loading.set(false);
-            } else {
-              window.alert("Error en la operación de obtener las bandas: ".concat(err.message));
-              this.loading.set(false);
-              this.router.navigateByUrl('/login');
-            }
-          },
-        });
-    }
-
     if (this.userRoleObject.role.toString() === 'ROLE_ADMIN') {  // check the logged in user role
       setAllBands();
       this.longText = "Las siguientes son todas las bandas registradas en el sistema que puedes visualizar como admin.";
     } else {
-      setBandsByMember(this.userRoleObject.nickname.trim());
+      this.setBandsByMember(this.userRoleObject.nickname.trim());
       this.longText = "Las siguientes son las bandas en las que eres miembro, puedes visualizar su información.";
     }
   }
 
-  protected filterBandsByUserAsDirector(director : string) {
+  protected filterBandsByUserAsDirector(director: string) {
     this.loading.set(true);
     this.allBandsAreListedAsAdmin = false;
     this.bandsAreFilteredByDirector = true;
     this.longText = "Las siguientes son las bandas que dirijes. Puedes visualizar, actualizar o borrar su información."
     this.dataSource = new MatTableDataSource<Band, MatPaginator>(
-      ManageBandsComponent.bands.filter(value => value.director===director)
+      ManageBandsComponent.bands.filter(value => value.director === director)
     );
     this.loading.set(false);
   }
 
-  protected filterBandsByUserAsMember(member : string) {
+  protected filterBandsByUserAsMember(member: string) {
     this.loading.set(true);
     this.allBandsAreListedAsAdmin = false;
-    this.bandsAreFilteredByDirector = true;
     this.longText = "Las siguientes son las bandas en las que eres miembro, puedes visualizar su información."
-    this.dataSource = new MatTableDataSource<Band, MatPaginator>(
-      ManageBandsComponent.bands.filter(value => value.users?.findIndex(u => u.nickname===member)!==-1)
-    );
-    this.loading.set(false);
-  }
-
-  /** It set (again) saved users into filteredUsers attribute, wich correspond to a filter users signal  */
-  filterUsers() {
-    const filterValue = this.input.nativeElement.value.toLowerCase();
-    this.filteredUsers.set(
-      this.filteredUsers()
-        .filter(user => {
-          const substring = user
-            .nickname
-            .toLowerCase()
-            .normalize("NFD")
-            // characters with tildes (and other accents) are converted to their plain, unaccented counterparts,
-            // through normalize() and regular expression /[\\u0300-\\u036f]/g allowing for case-insensitive and
-            // accent-insensitive comparisons or searches
-            .replace(/[\u0300-\u036f]/g, "")
-            .substring(0, filterValue.length);
-          return substring === filterValue;
-        })
-    );
+    if (this.bandsAreFilteredByDirector) {
+      this.loading.set(true);
+      this.setBandsByMember(member);
+    } else {
+      this.dataSource = new MatTableDataSource<Band, MatPaginator>(
+        ManageBandsComponent.bands.filter(value => value.users?.findIndex(u => u.nickname === member) !== -1)
+      );
+      this.loading.set(false);
+    }
   }
 
   handleMenuItem(menuItem: string) {
-    if (menuItem === 'listar') {
+    if (menuItem === "listar") {
+      if (this.menuItemSelectionIsConsult())
+        this.menuItemSelectionIsConsult.set(false);
       this.loading.set(true);
       this.fetchBands();
     }
-    if (menuItem === 'estadísticas') {
+    if (menuItem === "consultar")
+      this.menuItemSelectionIsConsult.set(true);
+    if (menuItem === "estadísticas") {
       this.router.navigate(['/dashboard/bandas/estadisticas']);
     }
   }
 
-  onFilterUsersInputFocus() {
-    this.userService.listAll()
-      .subscribe({
-        next: (value) => {
-          this.filteredUsers.set(
-            value.filter(element => {
-              return element.nickname !== this.userRoleObject.nickname;
-            }
-            ));
-        },
-        error: () => {
-          window.alert("Error en la operación de obtener los usuario(s)");
-        },
-      });
-  }
-
-  getManagingBandEnumType() {
-    return ManagingBandAction;
+  onFilterBandsInputFocus() {
+    if (this.userRoleObject.role.toString()==='ROLE_ADMIN') {
+      if (ManageBandsComponent.bands.length>1) {
+        this.filteredBands.set(ManageBandsComponent.bands);
+      } else {
+        this.bandService
+            .listAllBands()
+            .subscribe(values => {
+              ManageBandsComponent.bands = values;
+              this.filteredBands.set(ManageBandsComponent.bands);
+            });
+      }
+    } else {
+      if (ManageBandsComponent.bands.length>1) {
+        this.filteredBands.set(ManageBandsComponent.bands);
+      } else {
+        this.bandService
+            .listBandsByMemberUserNickname(this.userRoleObject.nickname)
+            .subscribe(values => {
+              ManageBandsComponent.bands = values;
+              this.filteredBands.set(ManageBandsComponent.bands);
+            });
+      }
+    }
   }
 
   openFormDialog(action: ManagingBandAction, data?: any) {
@@ -258,11 +214,11 @@ export class ManageBandsComponent {
       this.bandService.listBandsByDirector(this.userRoleObject.nickname)
         .subscribe({
           next: (value) => {
-            if (value.length>0) {
+            if (value.length > 0) {
               this.dialog.open(MembershipInvitationFormDialogComponent, {
                 data: {
                   bands: value,
-                  userNickname: this.userNicknameControl.value as string
+                  userNickname: this.searchUserInputValue
                 },
                 enterAnimationDuration: 4,
                 hasBackdrop: true
@@ -306,6 +262,83 @@ export class ManageBandsComponent {
     }
   }
 
+  onSearchBand() {
+    var name = this.bandNameControl.value;
+    if (name!==null && name.length >= 1) {
+      name = name.includes(' ') ? name.toLowerCase().trim() : name.toLowerCase();
+      this.loading.set(true);
+      this.bandService
+          .listBandsByNameContaining(name)
+          .subscribe({
+            next: (value) => {
+              ManageBandsComponent.bands = value;
+              this.dataSource = new MatTableDataSource<Band, MatPaginator>(ManageBandsComponent.bands);
+              this.bandsAreListed.set(true);
+              console.log(ManageBandsComponent.bands);
+              this.loading.set(false);
+            },
+            error: (err) => {
+              if (err.status === 401) { // if the user is not authenticated, then redirect to login page
+                window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a '/login'");
+                this.cookieService.delete('navigation');
+                localStorage.removeItem('accessToken');
+                AppComponent.userIsAuthenticated.set(false);
+                this.loading.set(false);
+                this.router.navigateByUrl('/login');
+              } else if (err.status === 403) {  // if user is authenticated but
+                // doesn't have any authority to perform the operation then an alert is shown
+                window.alert("No tienes permisos para realizar esta operación");
+                this.loading.set(false);
+              } else if (err.status === 404) {
+                window.alert("No se encontró ninguna banda con ese nombre");
+                this.loading.set(false);
+              } else {
+                console.error(err.message);
+                this.loading.set(false);
+              }
+            }
+          })
+    } else {
+      window.alert("Por favor, ingresa un texto válido con al menos 1 caracter.");
+    }
+  }
+
+  onSearchUsernameInput(value : string) {
+    this.searchUserInputValue = value;
+  }
+
+  private setBandsByMember(nickname: string) {
+    this.bandService.listBandsByMemberUserNickname(nickname)
+      .subscribe({
+        next: (value) => {
+          ManageBandsComponent.bands = value;
+          this.dataSource = new MatTableDataSource<Band, MatPaginator>(ManageBandsComponent.bands);
+          this.allBandsAreListedAsAdmin = false;
+          this.bandsAreListed.set(true);
+          if (this.bandsAreFilteredByDirector)
+            this.bandsAreFilteredByDirector = false;
+          this.loading.set(false);
+        },
+        error: (err) => {
+          if (err.status === 401) {
+            window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a '/login'");
+            this.loading.set(false);
+            this.cookieService.delete('navigation');
+            localStorage.removeItem('accessToken');
+            AppComponent.userIsAuthenticated.set(false);
+            this.router.navigateByUrl('/login');
+          } else if (err.status === 403) {
+            window.alert("No tienes permisos para realizar esta operación");
+            this.loading.set(false);
+          } else {
+            window.alert("Error en la operación de obtener las bandas: ".concat(err.message));
+            this.loading.set(false);
+            this.router.navigateByUrl('/login');
+          }
+        },
+      });
+  }
+
   translateGenreToESString(genreStr: string) {
     switch (genreStr) {
       case "CLASSICAL":
@@ -347,5 +380,9 @@ export class ManageBandsComponent {
 
   get _bands() {
     return ManageBandsComponent.bands;
+  }
+
+  protected get managingBandActionEnumType() {
+    return ManagingBandAction;
   }
 }

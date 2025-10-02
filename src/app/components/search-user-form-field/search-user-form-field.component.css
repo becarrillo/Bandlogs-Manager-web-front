@@ -1,0 +1,43 @@
+mat-form-field {
+    display: flex;
+    width: 100%;
+}
+
+.search {
+    height: 4.3em;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    background-color: black;
+}
+
+#user {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 1pc;
+    margin-right: 1pc;
+    padding: 1pc;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#userFormFieldContainer {
+    display: inline-flex;
+    padding-top: 18px;
+    width: 75%;
+}
+
+.user-fullname {
+    display: inline-block;
+    font-size: x-small;
+    margin-left: 7vw;
+}
+
+.user-option {
+    display: flex;
+    width: 100%;
+}
+
+.user-option-div {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}

@@ -122,7 +122,8 @@ export class BandCreateFormDialogComponent {
       this.bandService
         .saveBand({
           name: this.bandCreateForm.value.name!,
-          musicalGenre: this.bandCreateForm.value.musicalGenre!
+          musicalGenre: this.bandCreateForm.value.musicalGenre!,
+          users: [directorUser]
         })
         .subscribe({
           next: (value) => {

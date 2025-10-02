@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { User } from '../interfaces/user';
 import { IUserRole } from '../interfaces/i-user-role';
@@ -9,26 +9,21 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class UserService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly authHeader = `Bearer ${localStorage.getItem('accessToken')}`;
 
   listAll() {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-    
     return this.http.get<User[]>(
       "http://localhost:8080/api/v1/usuarios",
-      {headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}}
+      {headers: {'Authorization': this.authHeader}}
     );
   }
 
   getUserByNickname(nickname : string) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     return this.http.get<User>(
       "http://localhost:8080/api/v1/usuarios/usuario",
       {
-        headers: {
-          'Authorization': AUTHORIZATION_HEADER_VALUE
-        },
+        headers: {'Authorization': this.authHeader},
         params : {'nombre-de-usuario': nickname}
       }
     );
@@ -47,36 +42,29 @@ export class UserService {
   } 
 
   setUserPhoneNumber(user : User, phoneNumber : string) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
     return this.http.patch<User>(
       `http://localhost:8080/api/v1/usuarios/${user.userId}/telefono/modificar`,
       {phoneNumber},
-      {headers: {'Authorization': AUTHORIZATION_HEADER_VALUE}}
+      {headers: {'Authorization': this.authHeader}}
     );
   }
 
   setUserRole(userId : number, dto : IUserRole) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-    
     return this.http.patch<User>(
       `http://localhost:8080/api/v1/usuarios/${userId}/rol/modificar`,
       dto,
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE,
+        headers: {'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'}
       }
     );
   }
 
-  updateUser(user : User) {
-    const AUTHORIZATION_HEADER_VALUE = `Bearer ${localStorage.getItem('accessToken')}`;
-
-    return this.http.put<User>(
+  updateUser(user : User) {return this.http.put<User>(
       `http://localhost:8080/api/v1/usuarios/${user.userId}/modificar`,
       user,
       {
-        headers: {'Authorization': AUTHORIZATION_HEADER_VALUE,
+        headers: {'Authorization': this.authHeader,
           'Content-Type': 'application/json;charset=utf-8'}
       }
     );

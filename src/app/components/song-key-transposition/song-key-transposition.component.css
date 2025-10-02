@@ -1,0 +1,58 @@
+.current-progression {
+  display: flex;
+  flex-direction: column;
+}
+
+.current-progression-chips {
+  justify-self: center;
+}
+
+.key-transposition-container {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.harmonic-keys-circle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 300px; /* Adjust as needed */
+  justify-content: center;
+}
+
+.harmonic-keys-circle button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: rgb(150, 245, 216);
+  font-weight: 700;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.harmonic-keys-circle > button:disabled:hover {
+  cursor: default;
+}
+
+.harmonic-keys-circle > button:enabled:hover {
+  cursor: pointer;
+  transition: all 0.24s ease;
+  transform: scale(1.15);
+  rotate: 4deg;
+}
+
+.harmonic-keys-selection {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.selected-key {
+  background-color: #007bff;
+  color: white;
+  border-color: #0056b3;
+}

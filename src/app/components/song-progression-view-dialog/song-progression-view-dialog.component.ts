@@ -49,7 +49,6 @@ export class SongProgressionViewDialogComponent implements OnInit {
   protected readonly dialogRef = inject(MatDialogRef<SongProgressionViewDialogComponent>);
   private readonly bandService = inject(BandService);
   private readonly eventService = inject(EventService);
-  private readonly songService = inject(SongService);
   protected readonly router = inject(Router);
   private readonly musicalUtilService = inject(MusicalUtilService);
   protected readonly reactiveProgression = signal<string[]>(this.data.song.progression);
@@ -82,12 +81,12 @@ export class SongProgressionViewDialogComponent implements OnInit {
     progression.push((pitchStr as string).concat(';').concat(suffix));
     const song = this.data.song;
     if (song.tonalitySuffix===null)
-      song['tonalitySuffix'] = '';
+      song['tonalitySuffix'] = ' ';
     song['progression'] = progression;
     const event = this.data.event;
     event
       .repertoire[event.repertoire.findIndex(value => value.songId === song.songId)] = song;
-      console.log(JSON.stringify(event));
+    console.log(JSON.stringify(event));
     this.eventService
         .updateEvent(event.eventId!, event)
         .subscribe({
@@ -141,6 +140,10 @@ export class SongProgressionViewDialogComponent implements OnInit {
       throw new Error(`Invalid pitch string: ${pitchStr}`);
     }
     return pitch;
+  }
+
+  getSongTonality() : string {
+    return this.data.tonality;
   }
 
   updateChord() {
@@ -322,7 +325,7 @@ export class SongProgressionViewDialogComponent implements OnInit {
     event['repertoire'][this.chordIndex] = song;
     event['repertoire'] = event.repertoire.map(value => {
       if (value.tonalitySuffix === null)
-        value['tonalitySuffix'] = '';
+        value['tonalitySuffix'] = ' ';
       return value;
     });
     
@@ -336,6 +339,7 @@ export class SongProgressionViewDialogComponent implements OnInit {
               next: (value) => {
                 console.log(JSON.stringify(value));
                 this.dialogRef.close();
+                window.location.reload();
                 this.loading.set(false);
               },
               error: (err) => {
