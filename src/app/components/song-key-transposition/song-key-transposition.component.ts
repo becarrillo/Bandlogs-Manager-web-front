@@ -30,11 +30,12 @@ import { MusicalUtilService } from '../../services/musical-util.service';
 export class SongKeyTranspositionComponent implements OnChanges, OnInit {
   readonly songService = inject(SongService);
   readonly musicalUtilService = inject(MusicalUtilService);
-  readonly harmonicKeys: string[] = ['La', 'Sib', 'Si', 'Do', 'Do#', 'Re', 'Mib', 'Mi', 'Fa', 'Fa#', 'Sol', 'Lab'];
+  readonly latinStrPitchKeys: string[] = ['La', 'Sib', 'Si', 'Do', 'Do#', 'Re', 'Mib', 'Mi', 'Fa', 'Fa#', 'Sol', 'Lab'];
   songInfo = input<{
     songId: number | null;
-    title: string | null
-    tonality: string | null;
+    title: string | null;
+    pitch: string | null;
+    tonalitySuffix: string | null;
     progression: string[] | null
   }>();
   @Output('selectedKey')
@@ -43,21 +44,17 @@ export class SongKeyTranspositionComponent implements OnChanges, OnInit {
   readonly tonality = model<string>();
 
   ngOnInit(): void {
-    if (this.songInfo()?.tonality!==undefined) {
-      this.tonality.set(this.songInfo()!.tonality!);
-    }
-    if (this.songInfo()?.progression!==undefined) {
-      this.keywords.set(this.songInfo()!.progression!);
-    }
+    this.setTonalityAndProgression(
+      {pitchStr: this.songInfo()!.pitch, suffix: this.songInfo()!.tonalitySuffix},
+      this.songInfo()!.progression
+    );
   }
 
   ngOnChanges(): void {
-    if (this.songInfo()?.tonality!==undefined) {
-      this.tonality.set(this.songInfo()!.tonality!);
-    }
-    if (this.songInfo()?.progression) {
-      this.keywords.set(this.songInfo()!.progression!);
-    }
+    this.setTonalityAndProgression(
+      {pitchStr: this.songInfo()!.pitch, suffix: this.songInfo()!.tonalitySuffix},
+      this.songInfo()!.progression
+    );
   }
 
   getLatinNotationKey(keyword: string): string {
@@ -65,7 +62,7 @@ export class SongKeyTranspositionComponent implements OnChanges, OnInit {
         keyword.substring(keyword.indexOf(';')),
         ''
     );
-    return this.harmonicKeys
+    return this.latinStrPitchKeys
         ?.at(
           this.musicalUtilService
               .getPitchIndex(
@@ -80,7 +77,7 @@ export class SongKeyTranspositionComponent implements OnChanges, OnInit {
 
   selectKey(key: string): void {
     const tonality : string = this.tonality()!==undefined ? this.tonality()! : '';
-    const pitchStr = this.harmonicKeys.find(value => tonality.startsWith(value));
+    const pitchStr = this.latinStrPitchKeys.find(value => tonality.startsWith(value));
     const confirm = window
       .confirm(
         `
@@ -93,5 +90,17 @@ export class SongKeyTranspositionComponent implements OnChanges, OnInit {
       return;
     }
     this.key.emit(key);
+  }
+
+  private setTonalityAndProgression(
+    tonality : {pitchStr : string | null, suffix : string | null},
+    progression : string[] | null
+  ) {
+    if (tonality.pitchStr!==null && tonality.suffix!==null) {
+      this.tonality.set(this.songInfo()?.pitch!.concat(this.songInfo()?.tonalitySuffix!));
+    }
+    if (progression!==null) {
+      this.keywords.set(this.songInfo()!.progression!);
+    }
   }
 }

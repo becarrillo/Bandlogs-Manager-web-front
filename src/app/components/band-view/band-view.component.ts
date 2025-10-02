@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Band } from '../../interfaces/band';
 import { User } from '../../interfaces/user';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,20 +7,25 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { AuthService } from '../../services/auth.service';
 import { BandService } from '../../services/band.service';
+import { CookieService } from 'ngx-cookie-service';
 import { AppComponent } from '../../app.component';
-import { MatDialog } from '@angular/material/dialog';
 import { BandUpdateFormDialogComponent } from '../band-update-form-dialog/band-update-form-dialog.component';
 import { ManagingBandAction } from '../../enums/managing-band-action';
-import { BandDeleteDialogComponent } from '../band-delete-dialog/band-delete-dialog.component';
-import { AuthService } from '../../services/auth.service';
-import { IUserRole } from '../../interfaces/i-user-role';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EventDeleteDialogComponent } from '../event-delete-dialog/event-delete-dialog.component';
-import { UserService } from '../../services/user.service';
 import { EventUpdateFormDialogComponent } from '../event-update-form-dialog/event-update-form-dialog.component';
+import {
+  MembershipInvitationFormDialogComponent
+} from '../membership-invitation-form-dialog/membership-invitation-form-dialog.component';
+import { SearchUserFormFieldComponent } from '../search-user-form-field/search-user-form-field.component';
+import { BandDeleteDialogComponent } from '../band-delete-dialog/band-delete-dialog.component';
+import { IUserRole } from '../../interfaces/i-user-role';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -46,11 +51,11 @@ export class BandViewComponent {
   protected dialog = inject(MatDialog);
   readonly _snackbar = inject(MatSnackBar);
   protected userRoleObject!: IUserRole;
-  protected band = signal<Band>({} as Band);
+  private static band = signal<Band>({} as Band);
   protected members = signal<User[]>([]);
   protected events = signal<Event[]>([]);
   readonly memberUserColumns: string[] = ['lastname', 'firstname', 'nickname', 'phoneNumber', 'action'];
-  readonly eventsColumns : string[] = ['date', 'description', 'location', 'action'];
+  readonly eventsColumns: string[] = ['date', 'description', 'location', 'action'];
 
   constructor() {
     this.route.paramMap.subscribe(params => {
@@ -60,7 +65,7 @@ export class BandViewComponent {
           .getBandById(parseInt(paramStr))
           .subscribe({
             next: value => {
-              this.band.set(value);
+              BandViewComponent.band.set(value);
             },
             error: err => {
               console.error(err);
@@ -98,17 +103,18 @@ export class BandViewComponent {
 
   protected cancelMemberUser(band: Band, memberUser: User) {
     const confirm = window.confirm(`¿Estás seguro de retirar al miembro ${memberUser.nickname} de la banda?`);
-    if (confirm) {
-      band['users'] = band.users?.filter(u => {
-        return u!==memberUser;
-      });
-
-      this.bandService
-        .updateBand(this.band().bandId, band)
+    if (!confirm)
+      return;
+    var newVersionBand : Band = band;
+    newVersionBand['users'] = band.users?.filter(u => {
+      return u !== memberUser;
+    });
+    
+    this.bandService
+        .updateBand(BandViewComponent.band().bandId, newVersionBand)
         .subscribe({
           next: (value) => {
-            this.band.set(value);
-            window.alert("Banda actualizada: ".concat(this.band.name));
+            BandViewComponent.band.set(value);
           },
           error: (err) => {
             if (err.status === 401) {
@@ -123,7 +129,6 @@ export class BandViewComponent {
             }
           }
         });
-    }
   }
 
   getManagingBandEnumType() {
@@ -132,9 +137,12 @@ export class BandViewComponent {
 
   /** Transform band musical genre enum type to a (es) string */
   getMusicalGenreString() {
-    switch (this.band().musicalGenre.toString()) {
+    switch (BandViewComponent.band().musicalGenre.toString()) {
       case "CLASSICAL":
         return "Música clásica";
+        break;
+      case "COMERCIAL_BALLAD":
+        return "Balada";
         break;
       case "COMERCIAL_JAZZ":
         return "Jazz";
@@ -145,8 +153,13 @@ export class BandViewComponent {
       case "COMERCIAL_POP":
         return "Pop";
         break;
-      case "COMERCIAL_VALLENATO":
-        return "Vallenato";
+      case "COMERCIAL_LATIN":
+        return "Latino";
+      case "COMERCIAL_MEX":
+        return "Mexicano";
+        break;
+      case "COMERCIAL_CUMBIA_VALLENATO":
+        return "Cumbia/Vallenato";
         break;
       case "FOLKLORIC":
         return "Folclórico";
@@ -176,7 +189,18 @@ export class BandViewComponent {
     }
     if (action === ManagingBandAction.TO_DELETE) {
       this.dialog.open(BandDeleteDialogComponent, {
-        data: {band: this.band()},
+        data: { band: BandViewComponent.band() },
+        enterAnimationDuration: 4,
+        hasBackdrop: true
+      })
+    }
+    if (action === ManagingBandAction.TO_ADD_MEMBER_TO_BAND) {
+      this.dialog.open(BandSearchAndAddMemberDialogComponent, {
+        data: {
+          loggedInUsername: this.userRoleObject.nickname,
+          bandId: BandViewComponent.band().bandId,
+          bandService: this.bandService
+        },
         enterAnimationDuration: 4,
         hasBackdrop: true
       })
@@ -194,5 +218,97 @@ export class BandViewComponent {
         hasBackdrop: true
       })
     }
+  }
+
+  public get _band() {
+    return BandViewComponent.band();
+  }
+
+  static set _band(value: Band) {
+    BandViewComponent.band.set(value);
+  }
+}
+
+@Component({
+  selector: 'app-band-search-and-add-member-dialog-component',
+  standalone: true,
+  imports: [
+    MatDialogModule,
+    SearchUserFormFieldComponent
+  ],
+  template: `
+    <mat-dialog-content>
+      <app-search-user-form-field
+          (searchUser)="
+            onSearchUser($event);
+            openNextFormDialog();
+          "
+          [loggedInUsername]="_data.loggedInUsername"
+        >
+      </app-search-user-form-field>
+    </mat-dialog-content>
+  `,
+  styleUrl: './band-view.component.css'
+})
+export class BandSearchAndAddMemberDialogComponent {
+  private readonly data = inject<{
+    loggedInUsername: string;
+    bandId: number;
+    bandService: BandService;
+  }>(MAT_DIALOG_DATA);
+  private readonly dialog = inject(MatDialog);
+  private readonly dialogRef = inject(MatDialogRef<BandSearchAndAddMemberDialogComponent>)
+  private readonly router = inject(Router);
+  private readonly cookieService = inject(CookieService);
+  searchUserInputValue : string = '';
+
+  onSearchUser(value : string) {
+    this.searchUserInputValue = value;
+  }
+
+  openNextFormDialog() {
+    this.data
+        .bandService
+        .listBandsByDirector(this.data.loggedInUsername)
+        .subscribe({
+          next: (values) => {
+            const bands = values.filter(v => {
+              const users = v.users!;
+              users.findIndex(user => user.nickname===this.searchUserInputValue)===-1;
+            });
+            if (bands.length===0) {
+              window.alert("No tienes bandas dirigidas pendientes para invitar a "+this.searchUserInputValue);
+              this.dialogRef.close();
+              return;
+            }
+            this.dialog.open(MembershipInvitationFormDialogComponent, {
+              data: {
+                bands,
+                userNickname: this.searchUserInputValue
+              },
+              enterAnimationDuration: 4,
+              hasBackdrop: true
+            });
+          },
+          error: (err) => {
+            if (err.status === 401) {
+              window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a '/login'");
+              this.cookieService.delete('navigation');
+              localStorage.removeItem('accessToken');
+              AppComponent.userIsAuthenticated.set(false);
+              this.router.navigateByUrl('/login');
+            } else if (err.status === 403) {
+              window.alert("No tienes permisos para realizar esta operación");
+            } else {
+              window.alert("Error en la operación de obtener las bandas: ".concat(err.message));
+              this.router.navigateByUrl('/login');
+            }
+            console.error(err);
+          },
+        });
+  }
+
+  protected get _data() {
+    return this.data;
   }
 }

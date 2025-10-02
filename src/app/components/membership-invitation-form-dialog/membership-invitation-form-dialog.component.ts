@@ -88,7 +88,11 @@ export class MembershipInvitationFormDialogComponent {
                     .subscribe({
                       next: (band) => {
                         this.openSnackBar(
-                          `El usuario ${user.nickname} es ahora un miembro de ${band.name}.\n Cantidad de miembros: ${band.users?.length} miembros`);
+                          `El usuario ${user.nickname} es ahora un miembro de ${band.name}.\n Cantidad de miembros: ${band.users?.length}`);
+                        this.dialogRef.close();
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 1500);
                       },
                       error: (err) => {
                         this.openSnackBar("Error al agregar el miembro a la(s) banda(s). No se pudo completar la operación");
@@ -108,7 +112,7 @@ export class MembershipInvitationFormDialogComponent {
       {
         duration: 4500,
         verticalPosition: "top",
-        horizontalPosition: "right"
+        horizontalPosition: "center"
       });
     this.dialogRef.close();
   }

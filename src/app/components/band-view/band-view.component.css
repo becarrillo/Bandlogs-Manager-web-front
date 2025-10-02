@@ -6,21 +6,39 @@
 
 .band-container {
     display: flex;
+    justify-self: center;
     flex-direction: column;
     background-color: transparent;
-    width: fit-content;
-    overflow-x: auto;
+    width: 100%;
+}
+
+@media screen and (max-width: 767px) {
+    .band-container {
+        width: 100vw;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .band-container {
+        width: 75%;
+    }
 }
 
 .side-menu {
     display: flex;
-    padding: 2.5em 3em 2.5em 3em;
+    justify-content: center;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border: 1px solid rgb(0, 0, 0);
+    border-radius: 10px;
+    background-color: rgb(3, 102, 102);
 }
 
 .side-menu-list {
     display: flex;
-    padding: 0%;
-    column-gap: 3pc;
+    justify-content: space-between;
+    width: 100%;
+    padding-left: 7em;
 }
 
 .side-menu-list > mat-list-item {

@@ -16,12 +16,14 @@
         </mat-chip-set>
     </div>
     
-    <div class="harmonic-keys-selection">
+    <div class="keys-selection">
         <span>Selecciona la nueva tonalidad:</span>
-        <div class="harmonic-keys-circle">
-            @for (key of harmonicKeys; track $index) {
-            <button (click)="selectKey(key)"
-                [disabled]="songInfo()?.tonality!.startsWith(key)">
+        <div class="keys-circle">
+            @for (key of latinStrPitchKeys; track $index) {
+            <button class="keys-circle"
+                (click)="selectKey(key)"
+                [disabled]="(songInfo()?.pitch!)===key"
+            >
                 {{ key }}
             </button>
             }

@@ -20,6 +20,7 @@ import { FormSuspenseComponent } from '../form-suspense/form-suspense.component'
 import { AppComponent } from '../../app.component';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BandUpdateSuccessSnackBarComponent } from '../band-update-success-snack-bar/band-update-success-snack-bar.component';
+import { BandViewComponent } from '../band-view/band-view.component';
 
 @Component({
   selector: 'app-band-update-form-dialog',
@@ -165,6 +166,7 @@ export class BandUpdateFormDialogComponent {
                     verticalPosition: "bottom",
                     horizontalPosition: "center"
                   });
+                  BandViewComponent._band = value;
                   this.loading.set(false);
                   this.dialogRef.close();
                 },

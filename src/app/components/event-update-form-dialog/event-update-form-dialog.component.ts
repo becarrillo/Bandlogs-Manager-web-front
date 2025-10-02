@@ -72,63 +72,56 @@ export class EventUpdateFormDialogComponent implements OnInit {
   protected readonly songEditForm = new FormBuilder().group({
     songId: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
     title: new FormControl<string | null>(null, [Validators.required, Validators.minLength(2)]),
-    tonality: new FormControl<string | null>({ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]),
+    pitch: new FormControl<string | null>({ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]),
+    tonalitySuffix: new FormControl<string | null>(''),
     progression: new FormControl<string[]>([], Validators.required),
     progressionChordOption: new FormControl<string | null>('', Validators.minLength(1))
   });
-  readonly filteredTonalityOptions = signal<{ pitch: string; suffix: string; }[]>(this.getLatinStrTonalityOptions());
+  readonly filteredPitchStrOptions = signal<string[]>(this.getSingleLatinStrTonalityPitches());
   protected readonly progressionOptions = signal<{ pitch: string; suffix: string; }[]>(this.getChords());
+  filteredProgressionOptions!: Observable<{ pitch: string; suffix: string; }[]>;
 
   @ViewChild('chordEntry') progressionChordInput!: ElementRef<HTMLInputElement>;
   readonly reactiveKeywords = signal<string[]>(this.songEditForm.value.progression!);
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-  readonly pitch = this.musicalUtilService.getPitch;
-  readonly pitchIndex = this.musicalUtilService.getPitchIndex;
-  readonly latinStrChordPitch = this.musicalUtilService.formatChordPitch;
 
-  filteredProgressionOptions!: Observable<{ pitch: string; suffix: string; }[]>;
   repertoireSignal = signal<Song[]>([]);
   eventRepertoireIsShown = false;
   protected songEditFormEnabledControlValuesCopy!: {
     songId: number | null,
     title: string | null,
-    tonality: string | null,
+    pitch: string | null,
+    tonalitySuffix: string | null,
     progression: string[] | null
   }
   protected submitEventBtnIsDisabled = true;
   protected songKeyTranspositionIsOpened = false;
   readonly loading = signal(false);
+  readonly pitch = this.musicalUtilService.getPitch;
+  readonly pitchIndex = this.musicalUtilService.getPitchIndex;
+  readonly latinStrChordPitch = this.musicalUtilService.formatChordPitch;
 
   ngOnInit(): void {
     this.repertoireSignal.set(this.data.event.repertoire as Song[]);
     this.eventUpdateBasicForm.valueChanges.subscribe(() => {
       this.submitEventBtnIsDisabled = false;
     });
-    this.songEditForm.controls.tonality.valueChanges.subscribe(value => {
+    this.songEditForm.controls.pitch.valueChanges.subscribe(value => {
       if (value !== null && value.length >= 1) {
-        this.filteredTonalityOptions.set(
-          this.getLatinStrTonalityOptions().filter(option => {
-            return option.pitch.concat(option.suffix).toLowerCase().includes(value.toLowerCase());
+        this.filteredPitchStrOptions.set(
+          this.getSingleLatinStrTonalityPitches().filter(option => {
+            return option.toLowerCase().includes(value.toLowerCase());
           })
         );
       } else {
-        this.filteredTonalityOptions.set(this.getLatinStrTonalityOptions());
+        this.filteredPitchStrOptions.set(this.getSingleLatinStrTonalityPitches());
       }
     });
 
     this.filteredProgressionOptions = this.songEditForm.controls.progressionChordOption.valueChanges.pipe(
       startWith(''),
-      map(value => this._filter(this.progressionOptions(), value || ''))
+      map(value => this.filterProgressionOptions(this.progressionOptions(), value || ''))
     );
-  }
-
-  private _filter(options: { pitch: string; suffix: string; }[], value: string) {
-    return options
-      .filter(option => option.pitch
-        .concat(option.suffix)
-        .toLowerCase()
-        .includes(value.toLowerCase())
-      )
   }
 
   addReactiveChordKeyword(event: MatChipInputEvent) {
@@ -173,21 +166,13 @@ export class EventUpdateFormDialogComponent implements OnInit {
       });
   }
 
-  navigationComeBack() {
-    if (this.songEditFormHasValues()) {
-      this.songEditForm.controls.title.setValue(null),
-        this.songEditForm.controls.tonality.setValue(null),
-        this.songEditForm.controls.progression.setValue(null),
-        this.songEditForm.controls.progressionChordOption.setValue(''),
-        this.repertoireSignal.set(this.data.event.repertoire)
-    } else {
-      if (this.songKeyTranspositionIsOpened) {
-        this.repertoireSignal.set(this.data.event.repertoire as Song[]);
-        this.songKeyTranspositionIsOpened = false;
-      }
-      else
-        this.eventRepertoireIsShown = false;
-    }
+  private filterProgressionOptions(options: { pitch: string; suffix: string; }[], value: string) {
+    return options
+      .filter(option => option.pitch
+        .concat(option.suffix)
+        .toLowerCase()
+        .includes(value.toLowerCase())
+      )
   }
 
   protected findLatinTonalityStrPitch(pitch: Pitch) {
@@ -209,15 +194,6 @@ export class EventUpdateFormDialogComponent implements OnInit {
       });
     });
     return chords;
-  }
-
-  getLatinStrTonalityOptions() {
-    const arr = this.getSingleLatinStrTonalityPitches();
-    return arr.map(pitch => {
-      return SUFFIXES.map(suffix => {
-        return { pitch, suffix };
-      })
-    }).flat();
   }
 
   getLatinStrPitches() {
@@ -258,20 +234,10 @@ export class EventUpdateFormDialogComponent implements OnInit {
 
   handleKeySelection(key: string) {
     this.loading.set(true);
+    const tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonalitySuffix!;
+
+    // search index of pitch substring from key selection to song transposition
     var keyIndex!: number;
-    var tonalitySuffix = '';
-    LATIN_STRING_PITCHES.forEach(value => {
-      if (value.includes('/')) {
-        const split = value.split('/');
-        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(split.at(0)!))
-          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(split.at(0)!, '');
-        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(split.at(1)!))
-          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(split.at(1)!, '');
-      } else {
-        if (this.songEditFormEnabledControlValuesCopy.tonality!.startsWith(value))
-          tonalitySuffix = this.songEditFormEnabledControlValuesCopy.tonality!.replace(value, '');
-      }
-    });
     LATIN_STRING_PITCHES.forEach((value, index) => {
       if (value.includes('/')) {
         const split = value.split('/');
@@ -282,11 +248,9 @@ export class EventUpdateFormDialogComponent implements OnInit {
           keyIndex = index;
       }
     });
+
     const newTonality = key.concat(tonalitySuffix);
     const pitch = this.musicalUtilService.getPitch(keyIndex!, 'Pitch') as Pitch;
-    console.log(JSON.stringify(pitch));
-
-    console.log(newTonality);
     const event = this.data.event;
     const song = (event.repertoire as Song[])
       .find(s => s.songId === this.songEditFormEnabledControlValuesCopy.songId!)!;
@@ -294,7 +258,6 @@ export class EventUpdateFormDialogComponent implements OnInit {
       .transportSong(song.songId!, { pitch, suffix: tonalitySuffix })
       .subscribe({
         next: (value) => {
-          console.log(JSON.stringify(value));
           const event = this.data.event;
           // Update the song in the repertoire with the returned value
           event['repertoire'] = (event.repertoire as Song[]).map(s => {
@@ -344,50 +307,49 @@ export class EventUpdateFormDialogComponent implements OnInit {
         window.alert('Error desconocido, no se pudo realizar una actualización de la tonalidad.');
       }
     }
-    //const repertoire: Song[]
   }
 
   protected handleSongUpdate() {
     this.loading.set(true);
-    const pitch = (tonality: string) => {
+    const pitch = (pitchStr: string) => {
       return this.musicalUtilService
-        .getPitch(latinPitchIndex(tonality), 'Pitch') as Pitch
+        .getPitch(latinPitchIndex(pitchStr), 'Pitch') as Pitch
     }
-    const latinPitchIndex = (tonality: string) => LATIN_STRING_PITCHES.findIndex(value => {
+    const latinPitchIndex = (pitchStr: string) => LATIN_STRING_PITCHES.findIndex(value => {
       if (value.includes('/')) {
         const split = value.split('/');
-        return tonality.startsWith(split.at(0)!) || tonality.startsWith(split.at(1)!);
+        return (split.at(0)!)===pitchStr || (split.at(1)!)===pitchStr;
       }
-      return tonality.startsWith(value);
+      return value===pitchStr;
     });
-    var tonalitySuffix = '';
-    LATIN_STRING_PITCHES.forEach(value => {
+    var tonalitySuffix = this.songEditForm.value.tonalitySuffix!;
+    /*LATIN_STRING_PITCHES.forEach(value => {
       if (value.includes('/')) {
         const split = value.split('/');
-        if (this.songEditForm.value.tonality!.startsWith(split.at(0)!) &&
-          (this.songEditForm.value.tonality!.includes('b') ||
-            this.songEditForm.value.tonality!.includes('#'))
+        if (this.songEditForm.value.pitch!.startsWith(split.at(0)!) &&
+          (this.songEditForm.value.pitch!.includes('b') ||
+            this.songEditForm.value.pitch!.includes('#'))
         ) {
-          tonalitySuffix = this.songEditForm.value.tonality!.replace(split.at(0)!, '');
+          tonalitySuffix = this.songEditForm.value.pitch!.replace(split.at(0)!, '');
         }
-        if (this.songEditForm.value.tonality!.startsWith(split.at(1)!))
-          tonalitySuffix = this.songEditForm.value.tonality!.replace(split.at(1)!, '');
+        if (this.songEditForm.value.pitch!.startsWith(split.at(1)!))
+          tonalitySuffix = this.songEditForm.value.pitch!.replace(split.at(1)!, '');
       }
-      if (this.songEditForm.value.tonality!.startsWith(value)) {
-        if (this.songEditForm.value.tonality!.includes('b'))
-          tonalitySuffix = this.songEditForm.value.tonality!.replace(value + 'b', '');
-        else if (this.songEditForm.value.tonality!.includes('#'))
+      if (this.songEditForm.value.pitch!.startsWith(value)) {
+        if (this.songEditForm.value.pitch!.includes('b'))
+          tonalitySuffix = this.songEditForm.value.pitch!.replace(value + 'b', '');
+        else if (this.songEditForm.value.pitch!.includes('#'))
           tonalitySuffix = this.songEditForm.value.tonality!.replace(value + '#', '');
         else
           tonalitySuffix = this.songEditForm.value.tonality!.replace(value, '');
       }
-    });
+    });*/
     if (tonalitySuffix === null)
       tonalitySuffix = ' ';
     const song: Song = {
       songId: this.songEditForm.value.songId!,
       title: this.songEditForm.value.title!,
-      pitch: pitch(this.songEditForm.value.tonality!),
+      pitch: pitch(this.songEditForm.value.pitch!),
       tonalitySuffix,
       progression: this.songEditForm.value.progression!.map(value => {
         var latinStrPitch = LATIN_STRING_PITCHES.find(value1 => {
@@ -423,7 +385,8 @@ export class EventUpdateFormDialogComponent implements OnInit {
     this.songEditForm.setValue({
       songId: null,
       title: null,
-      tonality: null,
+      pitch: null,
+      tonalitySuffix: null,
       progression: [],
       progressionChordOption: null
     });
@@ -490,13 +453,31 @@ export class EventUpdateFormDialogComponent implements OnInit {
     this.repertoireSignal.set((this.data.event.repertoire as Song[]).filter(s => s !== song));
   }
 
+  navigationComeBack() {
+    if (this.songEditFormHasValues()) {
+      this.songEditForm.controls.title.setValue(null),
+      this.songEditForm.controls.pitch.setValue(null),
+      this.songEditForm.controls.tonalitySuffix.setValue(null),
+      this.songEditForm.controls.progression.setValue(null),
+      this.songEditForm.controls.progressionChordOption.setValue(''),
+      this.repertoireSignal.set(this.data.event.repertoire)
+    } else {
+      if (this.songKeyTranspositionIsOpened) {
+        this.repertoireSignal.set(this.data.event.repertoire as Song[]);
+        this.songKeyTranspositionIsOpened = false;
+      }
+      else
+        this.eventRepertoireIsShown = false;
+    }
+  }
+
   onProgressionChordKeywordSelected(ev: MatAutocompleteSelectedEvent): void {
     this.reactiveKeywords.update(keywords => [...keywords, ev.option.viewValue]);
     this.songEditForm.controls.progression.setValue([]);
     ev.option.deselect();
     this.filteredProgressionOptions = this.songEditForm.controls.progressionChordOption.valueChanges.pipe(
       startWith(''),
-      map(value => this._filter(this.getChords(), value || ''))
+      map(value => this.filterProgressionOptions(this.getChords(), value || ''))
     );
     this.progressionChordInput.nativeElement.setAttribute('value', '');
   }
@@ -571,15 +552,16 @@ export class EventUpdateFormDialogComponent implements OnInit {
     this.reactiveKeywords.set(keywords.map(value => {
       const pitchSubstring = value.substring(0, value.indexOf(';')).trim();
       const pitchIndex = parseInt(this.musicalUtilService.stringToPitch(pitchSubstring).toString());
-      return this.musicalUtilService.formatChordPitch(pitchIndex, this.songEditForm.value.tonality!)
-        .concat(value.replace(pitchSubstring + ';', ''));
+      return this.musicalUtilService.formatChordPitch(pitchIndex, this.songEditForm.value.pitch!)
+        .concat(value.replace(pitchSubstring+';', ''));
     }));
   }
 
   private songEditFormHasValues() {
     return this.songEditForm.value.songId !== null &&
       this.songEditForm.value.title !== null &&
-      this.songEditForm.value.tonality !== null &&
+      this.songEditForm.value.pitch !== null &&
+      this.songEditForm.value.tonalitySuffix !== null &&
       this.songEditForm.value.progression !== null;
   }
 

@@ -15,14 +15,14 @@
   margin-bottom: 2rem;
 }
 
-.harmonic-keys-circle {
+.keys-circle {
   display: flex;
   flex-wrap: wrap;
   width: 300px; /* Adjust as needed */
   justify-content: center;
 }
 
-.harmonic-keys-circle button {
+.keys-circle button {
   margin: 5px;
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -32,18 +32,18 @@
   font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
-.harmonic-keys-circle > button:disabled:hover {
+.keys-circle > button:disabled:hover {
   cursor: default;
 }
 
-.harmonic-keys-circle > button:enabled:hover {
+.keys-circle > button:enabled:hover {
   cursor: pointer;
   transition: all 0.24s ease;
   transform: scale(1.15);
   rotate: 4deg;
 }
 
-.harmonic-keys-selection {
+.keys-selection {
   display: flex;
   flex-direction: column;
   row-gap: 1.5rem;

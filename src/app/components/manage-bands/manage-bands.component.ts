@@ -212,37 +212,45 @@ export class ManageBandsComponent {
       });
     } else if (action === ManagingBandAction.TO_ADD_MEMBER_TO_BAND) {
       this.bandService.listBandsByDirector(this.userRoleObject.nickname)
-        .subscribe({
-          next: (value) => {
-            if (value.length > 0) {
-              this.dialog.open(MembershipInvitationFormDialogComponent, {
-                data: {
-                  bands: value,
-                  userNickname: this.searchUserInputValue
-                },
-                enterAnimationDuration: 4,
-                hasBackdrop: true
-              });
-            } else {
-              window.alert("Aún no eres director de al menos una banda");
-            }
-          },
-          error: (err) => {
-            if (err.status === 401) { // if the user is not authenticated, then redirect to login page
-              window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a NUESTRO '/login'");
-              this.cookieService.delete('navigation');
-              localStorage.removeItem('accessToken');
-              AppComponent.userIsAuthenticated.set(false);
-              this.loading.set(false);
-              this.router.navigateByUrl('/login');
-            } else if (err.status === 403) {
-              // if user is authenticated but doesn't have any authority to perform the operation then an alert is shown
-              window.alert("No tienes permisos para realizar esta operación");
-            } else {
-              window.alert("Error desconocido en la operación de obtener todas las bandas");
-            }
-          },
-        });
+          .subscribe({
+            next: (values) => {
+              if (values.length > 0) {
+                const bands = values.filter(v => {
+                  const users = v.users!;
+                  users.findIndex(user => user.nickname===this.searchUserInputValue)===-1;
+                });
+                if (bands.length===0) {
+                  window.alert("No tienes bandas dirigidas donde puedas invitar a "+this.searchUserInputValue);
+                  return;
+                }
+                this.dialog.open(MembershipInvitationFormDialogComponent, {
+                  data: {
+                    bands,
+                    userNickname: this.searchUserInputValue
+                  },
+                  enterAnimationDuration: 4,
+                  hasBackdrop: true
+                });
+              } else {
+                window.alert("Aún no eres director de al menos una banda");
+              }
+            },
+            error: (err) => {
+              if (err.status === 401) { // if the user is not authenticated, then redirect to login page
+                window.alert("Tu sesión expiró, por favor vuelve a autenticarte, se te redirigirá a NUESTRO '/login'");
+                this.cookieService.delete('navigation');
+                localStorage.removeItem('accessToken');
+                AppComponent.userIsAuthenticated.set(false);
+                this.loading.set(false);
+                this.router.navigateByUrl('/login');
+              } else if (err.status === 403) {
+                // if user is authenticated but doesn't have any authority to perform the operation then an alert is shown
+                window.alert("No tienes permisos para realizar esta operación");
+              } else {
+                window.alert("Error desconocido en la operación de obtener todas las bandas");
+              }
+            },
+          });
     } else if (action === ManagingBandAction.TO_UPDATE) {
       this.dialog.open(BandUpdateFormDialogComponent,
         {
@@ -303,8 +311,8 @@ export class ManageBandsComponent {
     }
   }
 
-  onSearchUsernameInput(value : string) {
-    this.searchUserInputValue = value;
+  onSearchUser(nickname : string) {
+    this.searchUserInputValue = nickname;
   }
 
   private setBandsByMember(nickname: string) {

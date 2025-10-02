@@ -42,10 +42,16 @@
             <mat-list id="repertoire" *ngIf="eventRepertoireIsShown && data.event.repertoire!==undefined && data.event.repertoire.length>0">
                 @for (song of repertoireSignal(); track song.songId) {
                 <mat-list-item>
-                    {{song.title}}
+                    {{song.title}} 
                     (
                     <span class="song-pitch">
-                        {{latinStrChordPitch(pitchIndex(song.pitch),songEditForm.value.tonality!)}}{{song.tonalitySuffix}}
+                        {{
+                            latinStrChordPitch(
+                                pitchIndex(song.pitch),
+                                songEditForm.value.pitch!
+                            )
+                        }}
+                        {{song.tonalitySuffix}}
                     </span>
                     )
                     <button
@@ -56,14 +62,19 @@
                             songEditForm.setValue({
                                 songId: song.songId!,
                                 title: song.title,
-                                tonality: getTonalityFromSibling($event)!.trim(),
+                                pitch: latinStrChordPitch(
+                                    pitchIndex(song.pitch),
+                                    songEditForm.value.pitch!
+                                ),
+                                tonalitySuffix: song.tonalitySuffix,
                                 progressionChordOption: '',
                                 progression: song.progression
                             });
                             songEditFormEnabledControlValuesCopy = {
                                 songId: songEditForm.value.songId!,
                                 title: songEditForm.value.title!,
-                                tonality: songEditForm.value.tonality!,
+                                pitch: songEditForm.value.pitch!,
+                                tonalitySuffix: songEditForm.value.tonalitySuffix!,
                                 progression: songEditForm.value.progression!
                             };
                             songKeyTranspositionIsOpened = false;
@@ -81,13 +92,15 @@
                             songEditFormEnabledControlValuesCopy = {
                                 songId: song.songId!,
                                 title: song.title,
-                                tonality: latinStrChordPitch(pitchIndex(song.pitch)).concat(song.tonalitySuffix || ''),
+                                pitch: latinStrChordPitch(pitchIndex(song.pitch)),
+                                tonalitySuffix: song.tonalitySuffix || '',
                                 progression: song.progression
                             };
                             songEditForm.setValue({
                                 songId: null,
                                 title: null,
-                                tonality: null,
+                                pitch : null,
+                                tonalitySuffix: null,
                                 progressionChordOption: null,
                                 progression: null
                             });
@@ -110,11 +123,12 @@
                 *ngIf="
                     eventRepertoireIsShown &&
                     songEditForm.value.title!==null &&
-                    songEditForm.value.tonality!==null &&
+                    songEditForm.value.pitch!==null &&
+                    songEditForm.value.tonalitySuffix &&
                     songEditForm.value.progression!==null
                 "
                 id="songEditForm"
-                (submit)="songEditForm.controls.tonality.enable(); handleSongUpdate();"
+                (submit)="songEditForm.controls.pitch.enable(); handleSongUpdate();"
             >
                 <fieldset>
                     <legend>Modificar canción</legend>
@@ -125,15 +139,19 @@
                             caracteres</mat-hint>
                     </mat-form-field>
                     <mat-form-field appearance="outline" disabled>
-                        <mat-label>Tonalidad</mat-label>
-                        <input matInput [matAutocomplete]="auto" placeholder="Tonalidad" formControlName="tonality"
+                        <mat-label>Altura de tonalidad</mat-label>
+                        <input matInput [matAutocomplete]="auto" placeholder="Altura de tonalidad" formControlName="pitch"
                             required>
                         <mat-autocomplete #auto="matAutocomplete">
-                            @for (option of filteredTonalityOptions(); track $index) {
+                            @for (option of filteredPitchStrOptions(); track $index) {
                             <mat-option
-                                [value]="option.pitch.concat(option.suffix)">{{option.pitch}}{{option.suffix}}</mat-option>
+                                [value]="option">{{option}}</mat-option>
                             }
                         </mat-autocomplete>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Complemento de tonalidad</mat-label>
+                        <input matInput placeholder="Complemento de tonalidad" formControlName="tonalitySuffix">
                     </mat-form-field>
                     <mat-form-field appearance="outline">
                         <mat-label>Progresión de acordes</mat-label>
@@ -166,14 +184,14 @@
                             <mat-option [value]="
                             latinStrChordPitch(
                                 getLatinStrPitches().indexOf(chord.pitch),
-                                songEditForm.value.tonality!
+                                songEditForm.value.pitch!
                             )
                                 .concat(chord.suffix)
                         ">
                                 {{
                                 latinStrChordPitch(
                                 getLatinStrPitches().indexOf(chord.pitch),
-                                songEditForm.value.tonality!
+                                songEditForm.value.pitch!
                                 )
                                 .concat(chord.suffix)
                                 }}

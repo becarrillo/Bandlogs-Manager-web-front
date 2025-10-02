@@ -203,8 +203,8 @@
       </mat-card-header>
       <mat-card-content>
         <app-search-user-form-field
-          (searchUsernameInput)="
-            onSearchUsernameInput($event);
+          (searchUser)="
+            onSearchUser($event);
             openFormDialog(managingBandActionEnumType.TO_ADD_MEMBER_TO_BAND);
           "
           [loggedInUserRole]="userRoleObject"

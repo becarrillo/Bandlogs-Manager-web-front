@@ -10,10 +10,9 @@ import { ManagingBandAction } from '../../enums/managing-band-action';
 import { UserService } from '../../services/user.service';
 import { MatDialog } from '@angular/material/dialog';
 import { CookieService } from 'ngx-cookie-service';
-import { IUserRole } from '../../interfaces/i-user-role';
-import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-search-user-form-field',
@@ -33,14 +32,13 @@ import { CommonModule } from '@angular/common';
 })
 export class SearchUserFormFieldComponent {
   private readonly userService = inject(UserService);
-  private readonly router = inject(Router);
   readonly dialog = inject(MatDialog);
   readonly cookieService = inject(CookieService);
   protected userNicknameControl = new FormControl('', Validators.required);
-  readonly loggedInUserRole = input<IUserRole>();
+  readonly loggedInUsername = input<string>();
   readonly filteredUsers = signal<User[]>([]);
   
-  @Output('searchUsernameInput') protected readonly searchUserEvent = new EventEmitter<string>();
+  @Output('searchUser') protected readonly searchUserEvent = new EventEmitter<string>();
   readonly loading = signal(false);
 
   /* It is used to filter users in the autocomplete input */
@@ -72,7 +70,7 @@ export class SearchUserFormFieldComponent {
           next: (value) => {
             this.filteredUsers.set(
               value.filter(element => {
-                  return element.nickname !== this.loggedInUserRole()!.nickname;
+                  return element.nickname !== this.loggedInUsername()!;
                 }
               ));
           },
